@@ -77,7 +77,7 @@ function AboutSection() {
           {' / '}
           <a
             className="font-semibold text-blue-700"
-            href="mailto:breath103@gmail.com"
+            href="https://www.linkedin.com/in/kurt-lee-70010391/"
           >
             LinkedIn
           </a>
