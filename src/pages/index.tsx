@@ -96,9 +96,9 @@ function PresentationSection() {
   }> = [
     {
       type: 'youtube',
-      videoId: 'eg1gya3QJis',
-      title: 'Going fully Serverless in real world ',
-      event: 'Serverless Summit 2021',
+      videoId: '7pRItmvbXLM',
+      title: '생성 AI 모델의 임베딩 벡터를 이용한 서버리스 추천 검색 구현하기',
+      event: 'AWS Summit Seoul 2023',
     },
     {
       type: 'youtube',
@@ -173,13 +173,6 @@ function PresentationSection() {
                         className="h-full w-full rounded-md border border-gray-400 object-cover transition-all hover:translate-y-[-2px] hover:shadow-lg"
                       />
                     </a>
-                    {/* <iframe
-                className="w-full h-full rounded-lg"
-                src={`c/embed/${presentation.videoId}`}
-                title={presentation.title}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-              /> */}
                   </div>
                   <a
                     href={`https://www.youtube.com/watch?v=${presentation.videoId}`}
