@@ -14,18 +14,17 @@ export default Page;
 function Home() {
   return (
     <>
-      <nav className='bg-slate-50/5'>
-        <div className={twMerge(
-          'relative w-full',
-          'max-w-lg px-4 py-4',
-          'lg:max-w-5xl lg:px-0',
-          'mx-auto'
-        )}>
-          <a className="py-4 text-2xl font-semibold">
-            About
-          </a>
+      <nav className="bg-slate-50/5">
+        <div
+          className={twMerge(
+            'relative w-full',
+            'max-w-lg px-4 py-4',
+            'lg:max-w-5xl lg:px-0',
+            'mx-auto'
+          )}
+        >
+          <a className="py-4 text-2xl font-semibold">About</a>
         </div>
-
       </nav>
 
       <main className="relative flex min-h-full w-full flex-col items-center">
