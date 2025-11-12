@@ -1,15 +1,28 @@
-import Document, { Head, Html, Main, NextScript } from 'next/document';
+import '../styles/globals.css';
+
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
 import Script from 'next/script';
 
-class MyDocument extends Document {
-  render() {
-    return (
-      <Html lang={this.props.locale}>
-        <Head />
+const font = Inter({ subsets: ['latin'] });
+
+export const metadata: Metadata = {
+  title: 'Kurt Lee',
+  description: 'Software Engineer, Startup Founder, AWS Serverless Hero',
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <head>
         <Script
           async
           src="https://www.googletagmanager.com/gtag/js?id=G-7QJNCN56BF"
-        ></Script>
+        />
         <Script
           id="googleAnalytics"
           strategy="afterInteractive"
@@ -23,13 +36,8 @@ class MyDocument extends Document {
             `,
           }}
         />
-        <body>
-          <Main />
-          <NextScript />
-        </body>
-      </Html>
-    );
-  }
+      </head>
+      <body className={font.className}>{children}</body>
+    </html>
+  );
 }
-
-export default MyDocument;

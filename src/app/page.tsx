@@ -1,17 +1,6 @@
-import type { GetServerSideProps, NextPage } from 'next';
 import { twMerge } from 'tailwind-merge';
 
-interface PageProps {}
-export const getServerSideProps: GetServerSideProps<PageProps> = async () => {
-  return { props: {} };
-};
-
-const Page: NextPage<PageProps> = () => {
-  return <Home />;
-};
-export default Page;
-
-function Home() {
+export default function Home() {
   return (
     <>
       <nav className="bg-slate-50/5">
