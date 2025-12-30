@@ -21,6 +21,12 @@
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "cSpell.words": ["Classname", "easings", "tailwindcss", "vaildators"],
+  "cSpell.words": [
+    "Classname",
+    "easings",
+    "Raycaster",
+    "tailwindcss",
+    "vaildators"
+  ],
   "typescript.tsdk": "node_modules/typescript/lib"
 }

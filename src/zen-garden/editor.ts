@@ -26,7 +26,9 @@ import type {
   RockWaveSettings,
   ZenGarden,
   ZenGardenGround,
+  ZenGardenMoss,
   ZenGardenObject,
+  ZenGardenRock,
 } from "./types";
 import { DEFAULT_ROCK_WAVE_SETTINGS } from "./types";
 
@@ -35,15 +37,18 @@ const TEXTURE_PATHS: Record<GroundTextureName, string> = {
   grass: "/textures/grass",
 };
 
+export type EditorMode = "normal" | "createMoss";
+
 export class ZenGardenEditor {
   // RxJS Subjects
   readonly $ground: BehaviorSubject<ZenGardenGround>;
   readonly $groundTextureName;
-  readonly $selectedRockId = new BehaviorSubject<string | null>(null);
+  readonly $selectedObjectId = new BehaviorSubject<string | null>(null);
   readonly $regenerateTexture = new Subject<void>();
-  readonly $rocks = new BehaviorSubject<ZenGardenObject[]>([]);
+  readonly $objects = new BehaviorSubject<ZenGardenObject[]>([]);
   readonly $ambientIntensity = new BehaviorSubject<number>(0.4);
   readonly $sunIntensity = new BehaviorSubject<number>(0.8);
+  readonly $mode = new BehaviorSubject<EditorMode>("normal");
 
   // Three.js objects
   private scene: THREE.Scene;
@@ -52,6 +57,8 @@ export class ZenGardenEditor {
   private controls: OrbitControls;
   private groundMesh: THREE.Mesh | null = null;
   private rockMeshes = new Map<string, THREE.Mesh>();
+  private mossMeshes = new Map<string, THREE.Mesh>();
+  private mossPointMeshes = new Map<string, THREE.Mesh[]>();
   private ambientLight: THREE.AmbientLight;
   private directionalLight: THREE.DirectionalLight;
   private arrowHelper: THREE.ArrowHelper;
@@ -73,6 +80,7 @@ export class ZenGardenEditor {
 
   // Dragging state
   private draggedRockId: string | null = null;
+  private draggedMossPoint: { mossId: string; pointIndex: number } | null = null;
   private isDragging = false;
   private mouseDownPos = { x: 0, y: 0 };
 
@@ -88,7 +96,7 @@ export class ZenGardenEditor {
       map((g) => g.textureName),
       distinctUntilChanged()
     );
-    this.$rocks.next(this.garden.objects);
+    this.$objects.next(this.garden.objects);
 
     // Setup Three.js
     this.scene = new THREE.Scene();
@@ -142,12 +150,16 @@ export class ZenGardenEditor {
     // Create border around garden
     this.createGardenBorder();
 
-    // Create rock meshes
+    // Create object meshes
     this.garden.objects.forEach((obj) => {
       if (obj.type === "rock") {
         const mesh = this.createRockMesh(obj);
         this.scene.add(mesh);
         this.rockMeshes.set(obj.id, mesh);
+      } else if (obj.type === "moss") {
+        const mesh = this.createMossMesh(obj);
+        this.scene.add(mesh);
+        this.mossMeshes.set(obj.id, mesh);
       }
     });
 
@@ -230,20 +242,21 @@ export class ZenGardenEditor {
       .subscribe();
 
     // When regenerate texture event fires, update the ground texture
-    combineLatest([this.$regenerateTexture, this.$rocks])
+    combineLatest([this.$regenerateTexture, this.$objects])
       .pipe(
         filter(() => this.groundTextureGen !== null),
-        map(([, rocks]) => rocks)
+        map(([, objects]) => objects.filter((o) => o.type === "rock"))
       )
       .subscribe((rocks) => {
         this.groundTextureGen?.update(rocks);
       });
 
-    // When selected rock changes, update visual appearance
-    this.$selectedRockId
+    // When selected object changes, update visual appearance
+    this.$selectedObjectId
       .pipe(distinctUntilChanged())
       .subscribe((selectedId) => {
         this.updateRockSelectionVisuals(selectedId);
+        this.updateMossSelectionVisuals(selectedId);
       });
 
     // Sync ambient intensity to Three.js light and shader
@@ -282,6 +295,19 @@ export class ZenGardenEditor {
     }
   }
 
+  private updateMossSelectionVisuals(selectedId: string | null): void {
+    // Hide all moss points first
+    this.hideAllMossPoints();
+
+    // Show points for selected moss
+    if (selectedId) {
+      const obj = this.garden.objects.find((o) => o.id === selectedId);
+      if (obj?.type === "moss") {
+        this.showMossPoints(selectedId);
+      }
+    }
+  }
+
   private setupEventListeners(): void {
     this.canvas.addEventListener("mousedown", this.handleMouseDown);
     this.canvas.addEventListener("mousemove", this.handleMouseMove);
@@ -307,6 +333,21 @@ export class ZenGardenEditor {
     this.updateMousePosition(event);
     this.raycaster.setFromCamera(this.mouse, this.camera);
 
+    // Check for moss point click first
+    const allPointMeshes = Array.from(this.mossPointMeshes.values()).flat();
+    const pointIntersects = this.raycaster.intersectObjects(allPointMeshes);
+
+    if (pointIntersects.length > 0) {
+      const pointMesh = pointIntersects[0].object;
+      this.draggedMossPoint = {
+        mossId: pointMesh.userData.mossId,
+        pointIndex: pointMesh.userData.pointIndex,
+      };
+      this.controls.enabled = false;
+      return;
+    }
+
+    // Check for rock click
     const rockMeshArray = Array.from(this.rockMeshes.values());
     const intersects = this.raycaster.intersectObjects(rockMeshArray);
 
@@ -323,22 +364,41 @@ export class ZenGardenEditor {
       this.isDragging = true;
     }
 
-    if (this.draggedRockId && this.isDragging && this.groundMesh) {
-      this.updateMousePosition(event);
-      this.raycaster.setFromCamera(this.mouse, this.camera);
-      const groundIntersects = this.raycaster.intersectObject(this.groundMesh);
+    if (!this.groundMesh) return;
 
-      if (groundIntersects.length > 0) {
-        const { point } = groundIntersects[0];
-        const mesh = this.rockMeshes.get(this.draggedRockId);
-        const obj = this.garden.objects.find(
-          (o) => o.id === this.draggedRockId
-        );
-        if (mesh && obj) {
-          mesh.position.set(point.x, 0.15, point.z);
-          obj.position.x = point.x;
-          obj.position.y = point.z;
-        }
+    this.updateMousePosition(event);
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+    const groundIntersects = this.raycaster.intersectObject(this.groundMesh);
+
+    if (groundIntersects.length === 0) return;
+
+    const { point } = groundIntersects[0];
+
+    // Handle moss point dragging
+    if (this.draggedMossPoint && this.isDragging) {
+      const { mossId, pointIndex } = this.draggedMossPoint;
+      const moss = this.garden.objects.find((o) => o.id === mossId);
+
+      if (moss && moss.type === "moss") {
+        // Update the point in the polygon path
+        moss.polygonPath[pointIndex] = { x: point.x, y: point.z };
+
+        // Update the mesh geometry
+        this.updateMossGeometry(mossId);
+      }
+      return;
+    }
+
+    // Handle rock dragging
+    if (this.draggedRockId && this.isDragging) {
+      const mesh = this.rockMeshes.get(this.draggedRockId);
+      const obj = this.garden.objects.find(
+        (o) => o.id === this.draggedRockId
+      );
+      if (mesh && obj && obj.type === "rock") {
+        mesh.position.set(point.x, 0.15, point.z);
+        obj.position.x = point.x;
+        obj.position.y = point.z;
       }
     }
   };
@@ -347,7 +407,11 @@ export class ZenGardenEditor {
     if (this.draggedRockId && this.isDragging) {
       this.saveAndRegenerate();
     }
+    if (this.draggedMossPoint && this.isDragging) {
+      this.saveAndRegenerate();
+    }
     this.draggedRockId = null;
+    this.draggedMossPoint = null;
     this.controls.enabled = true;
   };
 
@@ -357,27 +421,38 @@ export class ZenGardenEditor {
     this.updateMousePosition(event);
     this.raycaster.setFromCamera(this.mouse, this.camera);
 
-    const rockMeshArray = Array.from(this.rockMeshes.values());
-    const rockIntersects = this.raycaster.intersectObjects(rockMeshArray);
+    // Check all object meshes for selection
+    const allMeshes = [
+      ...Array.from(this.rockMeshes.values()),
+      ...Array.from(this.mossMeshes.values()),
+    ];
+    const objectIntersects = this.raycaster.intersectObjects(allMeshes);
 
-    if (rockIntersects.length > 0) {
-      const clickedId = rockIntersects[0].object.userData.id;
-      // Toggle selection: deselect if clicking already selected rock
-      if (this.$selectedRockId.value === clickedId) {
-        this.$selectedRockId.next(null);
+    if (objectIntersects.length > 0) {
+      const clickedId = objectIntersects[0].object.userData.id;
+      // Toggle selection: deselect if clicking already selected object
+      if (this.$selectedObjectId.value === clickedId) {
+        this.$selectedObjectId.next(null);
       } else {
-        this.$selectedRockId.next(clickedId);
+        this.$selectedObjectId.next(clickedId);
       }
       return;
     }
 
-    this.$selectedRockId.next(null);
+    this.$selectedObjectId.next(null);
 
     if (!this.groundMesh) return;
     const groundIntersects = this.raycaster.intersectObject(this.groundMesh);
     if (groundIntersects.length > 0) {
       const { point } = groundIntersects[0];
-      this.addRock(point.x, point.z);
+      const mode = this.$mode.value;
+
+      if (mode === "createMoss") {
+        this.addMoss(point.x, point.z);
+        this.$mode.next("normal");
+      } else {
+        this.addRock(point.x, point.z);
+      }
     }
   };
 
@@ -465,7 +540,7 @@ export class ZenGardenEditor {
     });
   }
 
-  private createRockMesh(rock: ZenGardenObject): THREE.Mesh {
+  private createRockMesh(rock: ZenGardenRock): THREE.Mesh {
     const rockGeometry = new THREE.SphereGeometry(0.3, 8, 6);
     rockGeometry.scale(1, 0.6, 1);
     const rockMaterial = new THREE.MeshStandardMaterial({
@@ -476,6 +551,101 @@ export class ZenGardenEditor {
     mesh.position.set(rock.position.x, 0.15, rock.position.y);
     mesh.userData.id = rock.id;
     return mesh;
+  }
+
+  private createMossMesh(moss: ZenGardenMoss): THREE.Mesh {
+    const shape = new THREE.Shape();
+    const points = moss.polygonPath;
+
+    // ShapeGeometry rotated by -PI/2 around X maps shape Y to world -Z
+    // Negate Y so polygon coords match world XZ coords
+    if (points.length > 0) {
+      shape.moveTo(points[0].x, -points[0].y);
+      for (let i = 1; i < points.length; i++) {
+        shape.lineTo(points[i].x, -points[i].y);
+      }
+      shape.closePath();
+    }
+
+    const geometry = new THREE.ShapeGeometry(shape);
+    const material = new THREE.MeshStandardMaterial({
+      color: 0x4a7c23,
+      roughness: 0.8,
+      side: THREE.DoubleSide,
+    });
+
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.position.y = 1.0; // Float above ground for visibility
+    mesh.userData.id = moss.id;
+    return mesh;
+  }
+
+  private createMossPointMeshes(moss: ZenGardenMoss): THREE.Mesh[] {
+    const pointMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffaa00,
+      emissive: 0xffaa00,
+      emissiveIntensity: 0.3,
+    });
+
+    return moss.polygonPath.map((point, index) => {
+      const geometry = new THREE.SphereGeometry(0.1, 8, 8);
+      const mesh = new THREE.Mesh(geometry, pointMaterial);
+      mesh.position.set(point.x, 1.05, point.y);
+      mesh.userData.mossId = moss.id;
+      mesh.userData.pointIndex = index;
+      return mesh;
+    });
+  }
+
+  private showMossPoints(mossId: string): void {
+    const moss = this.garden.objects.find((o) => o.id === mossId);
+    if (!moss || moss.type !== "moss") return;
+
+    // Remove existing point meshes
+    this.hideMossPoints(mossId);
+
+    // Create and add new point meshes
+    const pointMeshes = this.createMossPointMeshes(moss);
+    pointMeshes.forEach((mesh) => this.scene.add(mesh));
+    this.mossPointMeshes.set(mossId, pointMeshes);
+  }
+
+  private hideMossPoints(mossId: string): void {
+    const existingPoints = this.mossPointMeshes.get(mossId);
+    if (existingPoints) {
+      existingPoints.forEach((mesh) => {
+        this.scene.remove(mesh);
+        mesh.geometry.dispose();
+      });
+      this.mossPointMeshes.delete(mossId);
+    }
+  }
+
+  private hideAllMossPoints(): void {
+    this.mossPointMeshes.forEach((_, mossId) => {
+      this.hideMossPoints(mossId);
+    });
+  }
+
+  private updateMossGeometry(mossId: string): void {
+    const moss = this.garden.objects.find((o) => o.id === mossId);
+    if (!moss || moss.type !== "moss") return;
+
+    // Remove old mesh
+    const oldMesh = this.mossMeshes.get(mossId);
+    if (oldMesh) {
+      this.scene.remove(oldMesh);
+      oldMesh.geometry.dispose();
+    }
+
+    // Create new mesh with updated geometry
+    const newMesh = this.createMossMesh(moss);
+    this.scene.add(newMesh);
+    this.mossMeshes.set(mossId, newMesh);
+
+    // Recreate point meshes
+    this.showMossPoints(mossId);
   }
 
   private animate = (): void => {
@@ -490,14 +660,14 @@ export class ZenGardenEditor {
 
   private saveAndRegenerate(): void {
     saveGarden(this.garden);
-    this.$rocks.next([...this.garden.objects]);
+    this.$objects.next([...this.garden.objects]);
     this.$regenerateTexture.next();
   }
 
   // Public methods for UI interaction
 
   addRock(x: number, z: number): void {
-    const newRock: ZenGardenObject = {
+    const newRock: ZenGardenRock = {
       id: crypto.randomUUID(),
       type: "rock",
       position: { x, y: z },
@@ -511,7 +681,31 @@ export class ZenGardenEditor {
     this.saveAndRegenerate();
 
     // Auto-select the new rock
-    this.$selectedRockId.next(newRock.id);
+    this.$selectedObjectId.next(newRock.id);
+  }
+
+  addMoss(x: number, z: number): void {
+    const size = 0.5; // Initial size of moss square
+    const newMoss: ZenGardenMoss = {
+      id: crypto.randomUUID(),
+      type: "moss",
+      polygonPath: [
+        { x: x - size, y: z - size },
+        { x: x + size, y: z - size },
+        { x: x + size, y: z + size },
+        { x: x - size, y: z + size },
+      ],
+    };
+
+    this.garden.objects.push(newMoss);
+    const mesh = this.createMossMesh(newMoss);
+    this.scene.add(mesh);
+    this.mossMeshes.set(newMoss.id, mesh);
+
+    this.saveAndRegenerate();
+
+    // Auto-select the new moss
+    this.$selectedObjectId.next(newMoss.id);
   }
 
   deleteRock(id: string): void {
@@ -525,8 +719,8 @@ export class ZenGardenEditor {
       this.rockMeshes.delete(id);
     }
 
-    if (this.$selectedRockId.value === id) {
-      this.$selectedRockId.next(null);
+    if (this.$selectedObjectId.value === id) {
+      this.$selectedObjectId.next(null);
     }
 
     this.saveAndRegenerate();
@@ -534,13 +728,13 @@ export class ZenGardenEditor {
   
   updateRockSettings(id: string, settings: RockWaveSettings): void {
     const rock = this.garden.objects.find((o) => o.id === id);
-    if (rock) {
+    if (rock && rock.type === "rock") {
       rock.waveSettings = settings;
       this.saveAndRegenerate();
     }
   }
   
-  getRock(id: string): ZenGardenObject | undefined {
+  getObject(id: string): ZenGardenObject | undefined {
     return this.garden.objects.find((o) => o.id === id);
   }
   
@@ -557,6 +751,10 @@ export class ZenGardenEditor {
   
   setSunIntensity(value: number): void {
     this.$sunIntensity.next(value);
+  }
+
+  setMode(mode: EditorMode): void {
+    this.$mode.next(mode);
   }
 
   dispose(): void {

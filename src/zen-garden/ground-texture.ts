@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
 import type { GravelTextureSet } from "./materials";
-import type { ZenGardenGround, ZenGardenObject } from "./types";
+import type { ZenGardenGround, ZenGardenRock } from "./types";
 import { DEFAULT_ROCK_WAVE_SETTINGS } from "./types";
 
 const MAX_ROCKS = 32;
@@ -112,7 +112,7 @@ const fragmentShader = `
 
 export interface GroundTextureGenerator {
   normalDispTexture: THREE.WebGLRenderTarget;
-  update: (rocks: ZenGardenObject[]) => void;
+  update: (rocks: ZenGardenRock[]) => void;
   dispose: () => void;
 }
 
@@ -166,7 +166,7 @@ export function createGroundTextureGenerator(
 
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
-  function update(rocks: ZenGardenObject[]) {
+  function update(rocks: ZenGardenRock[]) {
     // Update rock uniforms
     const count = Math.min(rocks.length, MAX_ROCKS);
 

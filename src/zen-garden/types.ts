@@ -14,11 +14,19 @@ export interface ZenGardenGround {
 }
 
 // Objects (over the ground)
-export interface ZenGardenObject {
+export type ZenGardenObject = ZenGardenRock | ZenGardenMoss;
+
+export interface ZenGardenRock {
   id: string;
   type: "rock";
   position: { x: number; y: number };
   waveSettings?: RockWaveSettings;
+}
+
+export interface ZenGardenMoss {
+  id: string;
+  type: "moss";
+  polygonPath: Array<{ x: number; y: number }>;
 }
 
 export interface RockWaveSettings {
