@@ -8,33 +8,33 @@ import {
   Subject,
   switchMap,
   tap,
-} from "rxjs";
-import * as THREE from "three";
+} from 'rxjs';
+import * as THREE from 'three';
 // eslint-disable-next-line import/extensions
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
-import type { GroundTextureGenerator } from "./ground-texture";
-import { createGroundTextureGenerator } from "./ground-texture";
-import type { GravelTextureSet, GroundMaterial } from "./materials";
+import type { GroundTextureGenerator } from './ground-texture';
+import { createGroundTextureGenerator } from './ground-texture';
+import type { GravelTextureSet, GroundMaterial } from './materials';
 import {
   createGroundMaterial,
   disposeGravelTextures,
   loadGravelTextures,
-} from "./materials";
-import { loadGarden, saveGarden } from "./storage";
-import type { RockWaveSettings, ZenGarden, ZenGardenObject } from "./types";
-import { DEFAULT_ROCK_WAVE_SETTINGS } from "./types";
+} from './materials';
+import { loadGarden, saveGarden } from './storage';
+import type { RockWaveSettings, ZenGarden, ZenGardenObject } from './types';
+import { DEFAULT_ROCK_WAVE_SETTINGS } from './types';
 
-export type TextureName = "gravel" | "grass";
+export type TextureName = 'gravel' | 'grass';
 
 const TEXTURE_PATHS: Record<TextureName, string> = {
-  gravel: "/textures/gravel",
-  grass: "/textures/grass",
+  gravel: '/textures/gravel',
+  grass: '/textures/grass',
 };
 
 export class ZenGardenEditor {
   // RxJS Subjects
-  readonly $textureName = new BehaviorSubject<TextureName>("gravel");
+  readonly $textureName = new BehaviorSubject<TextureName>('gravel');
 
   readonly $selectedRockId = new BehaviorSubject<string | null>(null);
 
@@ -145,7 +145,7 @@ export class ZenGardenEditor {
 
     // Create rock meshes
     this.garden.objects.forEach((obj) => {
-      if (obj.type === "rock") {
+      if (obj.type === 'rock') {
         const mesh = this.createRockMesh(obj);
         this.scene.add(mesh);
         this.rockMeshes.set(obj.id, mesh);
@@ -162,7 +162,7 @@ export class ZenGardenEditor {
     this.animate();
 
     // Load initial texture
-    this.$textureName.next("gravel");
+    this.$textureName.next('gravel');
   }
 
   private setupSubscriptions(): void {
@@ -275,21 +275,21 @@ export class ZenGardenEditor {
   }
 
   private setupEventListeners(): void {
-    this.canvas.addEventListener("mousedown", this.handleMouseDown);
-    this.canvas.addEventListener("mousemove", this.handleMouseMove);
-    this.canvas.addEventListener("mouseup", this.handleMouseUp);
-    this.canvas.addEventListener("click", this.handleClick);
-    window.addEventListener("resize", this.handleResize);
-    window.addEventListener("keydown", this.handleKeyDown);
+    this.canvas.addEventListener('mousedown', this.handleMouseDown);
+    this.canvas.addEventListener('mousemove', this.handleMouseMove);
+    this.canvas.addEventListener('mouseup', this.handleMouseUp);
+    this.canvas.addEventListener('click', this.handleClick);
+    window.addEventListener('resize', this.handleResize);
+    window.addEventListener('keydown', this.handleKeyDown);
   }
 
   private removeEventListeners(): void {
-    this.canvas.removeEventListener("mousedown", this.handleMouseDown);
-    this.canvas.removeEventListener("mousemove", this.handleMouseMove);
-    this.canvas.removeEventListener("mouseup", this.handleMouseUp);
-    this.canvas.removeEventListener("click", this.handleClick);
-    window.removeEventListener("resize", this.handleResize);
-    window.removeEventListener("keydown", this.handleKeyDown);
+    this.canvas.removeEventListener('mousedown', this.handleMouseDown);
+    this.canvas.removeEventListener('mousemove', this.handleMouseMove);
+    this.canvas.removeEventListener('mouseup', this.handleMouseUp);
+    this.canvas.removeEventListener('click', this.handleClick);
+    window.removeEventListener('resize', this.handleResize);
+    window.removeEventListener('keydown', this.handleKeyDown);
   }
 
   private handleMouseDown = (event: MouseEvent): void => {
@@ -353,7 +353,13 @@ export class ZenGardenEditor {
     const rockIntersects = this.raycaster.intersectObjects(rockMeshArray);
 
     if (rockIntersects.length > 0) {
-      this.$selectedRockId.next(rockIntersects[0].object.userData.id);
+      const clickedId = rockIntersects[0].object.userData.id;
+      // Toggle selection: deselect if clicking already selected rock
+      if (this.$selectedRockId.value === clickedId) {
+        this.$selectedRockId.next(null);
+      } else {
+        this.$selectedRockId.next(clickedId);
+      }
       return;
     }
 
@@ -375,10 +381,10 @@ export class ZenGardenEditor {
 
   private handleKeyDown = (event: KeyboardEvent): void => {
     const rotateSpeed = 0.1;
-    if (event.key === "ArrowLeft" || event.key === "a") {
+    if (event.key === 'ArrowLeft' || event.key === 'a') {
       this.lightAngle -= rotateSpeed;
       this.updateLightPosition();
-    } else if (event.key === "ArrowRight" || event.key === "d") {
+    } else if (event.key === 'ArrowRight' || event.key === 'd') {
       this.lightAngle += rotateSpeed;
       this.updateLightPosition();
     }
@@ -485,7 +491,7 @@ export class ZenGardenEditor {
   addRock(x: number, z: number): void {
     const newRock: ZenGardenObject = {
       id: crypto.randomUUID(),
-      type: "rock",
+      type: 'rock',
       position: { x, y: z },
     };
 
