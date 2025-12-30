@@ -1,8 +1,9 @@
+import { Subject } from "rxjs";
 import * as THREE from "three";
 
 import type { Codable } from "./codable";
 import type { ZenGardenObject } from "./object";
-import type { Vector2, Vector2Encoded } from "./vector2";
+import type { Vector2Encoded } from "./vector2";
 
 export type RakePath =
   | { type: "points"; points: Array<Vector2Encoded>; closed: boolean }
@@ -22,6 +23,7 @@ const RAKE_Z = 0.02;
 export class ZenGardenRakeStroke implements ZenGardenObject, Codable<ZenGardenRakeStrokeEncoded> {
   readonly id: string;
   readonly object: ZenGardenRakeStrokeObject;
+  readonly $changed = new Subject<void>();
   private path: RakePath;
   private _width: number;
   private numberOfForks: number;
@@ -44,6 +46,7 @@ export class ZenGardenRakeStroke implements ZenGardenObject, Codable<ZenGardenRa
   set width(value: number) {
     this._width = value;
     this.object.updateGeometry({ path: this.path, width: value });
+    this.$changed.next();
   }
 
   setHighlight(highlighted: boolean): void {
@@ -55,6 +58,7 @@ export class ZenGardenRakeStroke implements ZenGardenObject, Codable<ZenGardenRa
   }
 
   dispose(): void {
+    this.$changed.complete();
     this.object.removeFromParent();
     this.object.dispose();
   }

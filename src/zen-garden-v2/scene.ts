@@ -1,3 +1,4 @@
+import { BehaviorSubject } from "rxjs";
 import * as THREE from "three";
 
 import type { Codable } from "./codable";
@@ -18,7 +19,7 @@ export class ZenGardenScene implements Codable<ZenGardenSceneEncoded> {
   private camera: THREE.PerspectiveCamera;
   private sun: Sun;
   readonly plain: ZenGardenPlain;
-  private objects: Map<string, ZenGardenRock | ZenGardenMoss | ZenGardenRakeStroke>;
+  readonly $objects = new BehaviorSubject<(ZenGardenRock | ZenGardenMoss | ZenGardenRakeStroke)[]>([]);
   private raycaster = new THREE.Raycaster();
 
   constructor(encoded: ZenGardenSceneEncoded) {
@@ -45,10 +46,11 @@ export class ZenGardenScene implements Codable<ZenGardenSceneEncoded> {
     this.scene.add(this.sun);
 
     // Plain
-    this.plain = new ZenGardenPlain(encoded.plain, this.scene);
+    this.plain = new ZenGardenPlain(encoded.plain);
+    this.scene.add(this.plain.object);
+    this.plain.subscribeToRakeStrokes(this.$objects);
 
     // Objects
-    this.objects = new Map();
     for (const e of encoded.objects) {
       this.addObject(e);
     }
@@ -77,14 +79,14 @@ export class ZenGardenScene implements Codable<ZenGardenSceneEncoded> {
   addObject(encoded: ZenGardenRockEncoded | ZenGardenMossEncoded | ZenGardenRakeStrokeEncoded): void {
     const obj = this.deserialize(encoded);
     this.scene.add(obj.object);
-    this.objects.set(obj.id, obj);
+    this.$objects.next([...this.$objects.value, obj]);
   }
 
   deleteObject(id: string): void {
-    const obj = this.objects.get(id);
+    const obj = this.$objects.value.find(o => o.id === id);
     if (obj) {
       obj.dispose();
-      this.objects.delete(id);
+      this.$objects.next(this.$objects.value.filter(o => o.id !== id));
     }
   }
 
@@ -97,8 +99,7 @@ export class ZenGardenScene implements Codable<ZenGardenSceneEncoded> {
     const mouse = new THREE.Vector2(screenX, screenY);
     this.raycaster.setFromCamera(mouse, this.camera);
 
-    const objects = Array.from(this.objects.values());
-    for (const obj of objects) {
+    for (const obj of this.$objects.value) {
       if (obj.testRaycast(this.raycaster)) {
         return obj;
       }
@@ -122,7 +123,7 @@ export class ZenGardenScene implements Codable<ZenGardenSceneEncoded> {
   serialize(): ZenGardenSceneEncoded {
     return {
       plain: this.plain.serialize(),
-      objects: Array.from(this.objects.values()).map((object) => object.serialize()),
+      objects: this.$objects.value.map(obj => obj.serialize()),
     };
   }
 }
