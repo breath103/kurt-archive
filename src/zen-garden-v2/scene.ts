@@ -1,8 +1,12 @@
 import * as THREE from "three";
 
 import type { Codable } from "./codable";
-import type { ZenGardenRockEncoded, ZenGardenMossEncoded, SelectableObject } from "./object";
-import { ZenGardenRock, ZenGardenMoss } from "./object";
+import type { ZenGardenObject } from "./object";
+import type { ZenGardenMossEncoded } from "./moss";
+import { ZenGardenMoss } from "./moss";
+import type { ZenGardenRockEncoded } from "./rock";
+import { ZenGardenRock } from "./rock";
+import { Vector2 } from "./vector2";
 
 export class ZenGardenScene implements Codable<ZenGardenSceneEncoded> {
   private scene: THREE.Scene;
@@ -56,7 +60,7 @@ export class ZenGardenScene implements Codable<ZenGardenSceneEncoded> {
     this.camera.updateProjectionMatrix();
   }
 
-  hitTest(screenX: number, screenY: number): SelectableObject | null {
+  hitTest(screenX: number, screenY: number): ZenGardenObject | null {
     const mouse = new THREE.Vector2(screenX, screenY);
     this.raycaster.setFromCamera(mouse, this.camera);
 
@@ -65,6 +69,19 @@ export class ZenGardenScene implements Codable<ZenGardenSceneEncoded> {
       if (obj.testRaycast(this.raycaster)) {
         return obj;
       }
+    }
+    return null;
+  }
+
+  screenToPlaneCoordinate(screenX: number, screenY: number): Vector2 | null {
+    const mouse = new THREE.Vector2(screenX, screenY);
+    this.raycaster.setFromCamera(mouse, this.camera);
+
+    const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+    const intersection = new THREE.Vector3();
+
+    if (this.raycaster.ray.intersectPlane(plane, intersection)) {
+      return new Vector2({ x: intersection.x, y: intersection.z });
     }
     return null;
   }

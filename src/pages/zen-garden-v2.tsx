@@ -14,7 +14,7 @@ const ZenGardenV2Page: NextPage = () => {
       objects: [
         { id: "rock1", type: "rock", position: { x: -1, y: 0 } },
         { id: "rock2", type: "rock", position: { x: 1, y: 1 } },
-        { id: "moss1", type: "moss", polygonPath: [
+        { id: "moss1", type: "moss", position: { x: 0, y: 0 }, polygonPath: [
           { x: -2, y: -2 },
           { x: -1, y: -2 },
           { x: -1, y: -1 },

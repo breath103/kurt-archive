@@ -2,17 +2,19 @@ import type { Subscription } from "rxjs";
 import { BehaviorSubject, pairwise, startWith } from "rxjs";
 import * as THREE from "three";
 
-import type { SelectableObject } from "./object";
+import type { ZenGardenObject } from "./object";
 import type { ZenGardenSceneEncoded } from "./scene";
 import { ZenGardenScene } from "./scene";
+import type { Vector2 } from "./vector2";
 
 export class ZenGardenEditor {
   private renderer: THREE.WebGLRenderer;
   private scene: ZenGardenScene;
   private canvas: HTMLCanvasElement;
-  private $selectedObject = new BehaviorSubject<SelectableObject | null>(null);
+  private $selectedObject = new BehaviorSubject<ZenGardenObject | null>(null);
   private subscriptions: Subscription[] = [];
   private disposed = false;
+  private dragging: { object: ZenGardenObject; lastPos: Vector2 } | null = null;
 
   constructor(canvas: HTMLCanvasElement, encoded: ZenGardenSceneEncoded) {
     this.canvas = canvas;
@@ -36,16 +38,49 @@ export class ZenGardenEditor {
       })
     );
 
-    canvas.addEventListener("click", this.handleClick);
+    canvas.addEventListener("mousedown", this.handleMouseDown);
+    canvas.addEventListener("mousemove", this.handleMouseMove);
+    canvas.addEventListener("mouseup", this.handleMouseUp);
     window.addEventListener("resize", this.handleResize);
 
     this.animate();
   }
 
-  private handleClick = (event: MouseEvent): void => {
-    const screenX = (event.clientX / window.innerWidth) * 2 - 1;
-    const screenY = -(event.clientY / window.innerHeight) * 2 + 1;
-    this.$selectedObject.next(this.scene.hitTest(screenX, screenY));
+  private screenCoords(event: MouseEvent): { x: number; y: number } {
+    return {
+      x: (event.clientX / window.innerWidth) * 2 - 1,
+      y: -(event.clientY / window.innerHeight) * 2 + 1,
+    };
+  }
+
+  private handleMouseDown = (event: MouseEvent): void => {
+    const screen = this.screenCoords(event);
+    const hit = this.scene.hitTest(screen.x, screen.y);
+
+    if (hit) {
+      const pos = this.scene.screenToPlaneCoordinate(screen.x, screen.y);
+      if (pos) {
+        this.dragging = { object: hit, lastPos: pos };
+        this.$selectedObject.next(hit);
+      }
+    }
+  };
+
+  private handleMouseMove = (event: MouseEvent): void => {
+    if (!this.dragging) return;
+
+    const screen = this.screenCoords(event);
+    const pos = this.scene.screenToPlaneCoordinate(screen.x, screen.y);
+
+    if (pos) {
+      const delta = pos.clone().sub(this.dragging.lastPos);
+      this.dragging.object.moveOnPlane(delta);
+      this.dragging.lastPos = pos;
+    }
+  };
+
+  private handleMouseUp = (): void => {
+    this.dragging = null;
   };
 
   private handleResize = (): void => {
@@ -62,7 +97,9 @@ export class ZenGardenEditor {
   dispose(): void {
     this.disposed = true;
     this.subscriptions.forEach((s) => s.unsubscribe());
-    this.canvas.removeEventListener("click", this.handleClick);
+    this.canvas.removeEventListener("mousedown", this.handleMouseDown);
+    this.canvas.removeEventListener("mousemove", this.handleMouseMove);
+    this.canvas.removeEventListener("mouseup", this.handleMouseUp);
     window.removeEventListener("resize", this.handleResize);
     this.renderer.dispose();
   }
