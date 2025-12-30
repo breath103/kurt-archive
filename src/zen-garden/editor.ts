@@ -21,19 +21,24 @@ import {
   loadGravelTextures,
 } from "./materials";
 import { loadGarden, saveGarden } from "./storage";
-import type { RockWaveSettings, ZenGarden, ZenGardenObject } from "./types";
+import type {
+  GroundTextureName,
+  RockWaveSettings,
+  ZenGarden,
+  ZenGardenGround,
+  ZenGardenObject,
+} from "./types";
 import { DEFAULT_ROCK_WAVE_SETTINGS } from "./types";
 
-export type TextureName = "gravel" | "grass";
-
-const TEXTURE_PATHS: Record<TextureName, string> = {
+const TEXTURE_PATHS: Record<GroundTextureName, string> = {
   gravel: "/textures/gravel",
   grass: "/textures/grass",
 };
 
 export class ZenGardenEditor {
   // RxJS Subjects
-  readonly $textureName = new BehaviorSubject<TextureName>("gravel");
+  readonly $ground: BehaviorSubject<ZenGardenGround>;
+  readonly $groundTextureName;
   readonly $selectedRockId = new BehaviorSubject<string | null>(null);
   readonly $regenerateTexture = new Subject<void>();
   readonly $rocks = new BehaviorSubject<ZenGardenObject[]>([]);
@@ -45,7 +50,7 @@ export class ZenGardenEditor {
   private camera: THREE.PerspectiveCamera;
   private renderer: THREE.WebGLRenderer;
   private controls: OrbitControls;
-  private ground: THREE.Mesh | null = null;
+  private groundMesh: THREE.Mesh | null = null;
   private rockMeshes = new Map<string, THREE.Mesh>();
   private ambientLight: THREE.AmbientLight;
   private directionalLight: THREE.DirectionalLight;
@@ -78,6 +83,11 @@ export class ZenGardenEditor {
   constructor(private canvas: HTMLCanvasElement) {
     // Load garden data
     this.garden = loadGarden();
+    this.$ground = new BehaviorSubject(this.garden.ground);
+    this.$groundTextureName = this.$ground.pipe(
+      map((g) => g.textureName),
+      distinctUntilChanged()
+    );
     this.$rocks.next(this.garden.objects);
 
     // Setup Three.js
@@ -149,22 +159,20 @@ export class ZenGardenEditor {
 
     // Start animation loop
     this.animate();
-
-    // Load initial texture
-    this.$textureName.next("gravel");
   }
 
   private setupSubscriptions(): void {
     // When texture name changes, load new textures
-    this.$textureName
+    this.$groundTextureName
       .pipe(
-        distinctUntilChanged(),
         switchMap((name) => {
           const path = TEXTURE_PATHS[name];
           return from(loadGravelTextures(this.textureLoader, path));
         }),
         tap((textures) => {
           if (this.disposed) return;
+
+          const ground = this.$ground.value;
 
           // Dispose old textures
           if (this.gravelTextures) {
@@ -176,9 +184,9 @@ export class ZenGardenEditor {
           if (this.groundMat) {
             this.groundMat.material.dispose();
           }
-          if (this.ground) {
-            this.scene.remove(this.ground);
-            this.ground.geometry.dispose();
+          if (this.groundMesh) {
+            this.scene.remove(this.groundMesh);
+            this.groundMesh.geometry.dispose();
           }
 
           this.gravelTextures = textures;
@@ -187,22 +195,14 @@ export class ZenGardenEditor {
           this.groundTextureGen = createGroundTextureGenerator(
             this.renderer,
             textures,
-            {
-              resolution: 2048,
-              gardenSize: this.garden.plain.size,
-              tileSize: 2.0,
-            }
+            ground
           );
 
           // Create new ground material
           this.groundMat = createGroundMaterial(
             textures,
             this.groundTextureGen.normalDispTexture.texture,
-            {
-              tileSize: 2.0,
-              displacementScale: 0.05,
-              gardenSize: this.garden.plain.size,
-            }
+            ground
           );
 
           // Update light uniforms
@@ -214,14 +214,14 @@ export class ZenGardenEditor {
           // Create ground mesh
           const segments = 512;
           const groundGeometry = new THREE.PlaneGeometry(
-            this.garden.plain.size.x,
-            this.garden.plain.size.y,
+            ground.size.x,
+            ground.size.y,
             segments,
             segments
           );
-          this.ground = new THREE.Mesh(groundGeometry, this.groundMat.material);
-          this.ground.rotation.x = -Math.PI / 2;
-          this.scene.add(this.ground);
+          this.groundMesh = new THREE.Mesh(groundGeometry, this.groundMat.material);
+          this.groundMesh.rotation.x = -Math.PI / 2;
+          this.scene.add(this.groundMesh);
 
           // Regenerate texture
           this.$regenerateTexture.next();
@@ -323,10 +323,10 @@ export class ZenGardenEditor {
       this.isDragging = true;
     }
 
-    if (this.draggedRockId && this.isDragging && this.ground) {
+    if (this.draggedRockId && this.isDragging && this.groundMesh) {
       this.updateMousePosition(event);
       this.raycaster.setFromCamera(this.mouse, this.camera);
-      const groundIntersects = this.raycaster.intersectObject(this.ground);
+      const groundIntersects = this.raycaster.intersectObject(this.groundMesh);
 
       if (groundIntersects.length > 0) {
         const { point } = groundIntersects[0];
@@ -373,8 +373,8 @@ export class ZenGardenEditor {
 
     this.$selectedRockId.next(null);
 
-    if (!this.ground) return;
-    const groundIntersects = this.raycaster.intersectObject(this.ground);
+    if (!this.groundMesh) return;
+    const groundIntersects = this.raycaster.intersectObject(this.groundMesh);
     if (groundIntersects.length > 0) {
       const { point } = groundIntersects[0];
       this.addRock(point.x, point.z);
@@ -421,7 +421,7 @@ export class ZenGardenEditor {
   }
 
   private createGardenBorder(): void {
-    const { x: width, y: depth } = this.garden.plain.size;
+    const { x: width, y: depth } = this.garden.ground.size;
     const borderHeight = 0.3;
     const borderThickness = 0.15;
 
@@ -544,8 +544,11 @@ export class ZenGardenEditor {
     return this.garden.objects.find((o) => o.id === id);
   }
   
-  setTexture(name: TextureName): void {
-    this.$textureName.next(name);
+  setGroundTexture(name: GroundTextureName): void {
+    const current = this.$ground.value;
+    this.$ground.next({ ...current, textureName: name });
+    this.garden.ground = this.$ground.value;
+    saveGarden(this.garden);
   }
   
   setAmbientIntensity(value: number): void {
@@ -569,8 +572,8 @@ export class ZenGardenEditor {
     if (this.groundMat) {
       this.groundMat.material.dispose();
     }
-    if (this.ground) {
-      this.ground.geometry.dispose();
+    if (this.groundMesh) {
+      this.groundMesh.geometry.dispose();
     }
 
     this.rockMeshes.forEach((mesh) => {

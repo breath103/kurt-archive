@@ -1,10 +1,19 @@
 export interface ZenGarden {
   objects: Array<ZenGardenObject>;
-  plain: {
-    size: { x: number; y: number };
-  };
+  ground: ZenGardenGround;
 }
 
+// Ground
+export type GroundTextureName = "gravel" | "grass";
+export interface ZenGardenGround {
+  textureName: GroundTextureName;
+  size: { x: number; y: number };
+  tileSize: number;
+  resolution: number;
+  displacementScale: number;
+}
+
+// Objects (over the ground)
 export interface ZenGardenObject {
   id: string;
   type: "rock";

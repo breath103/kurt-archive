@@ -1,26 +1,61 @@
 import type { NextPage } from "next";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import type {
+  GroundTextureName,
   RockWaveSettings,
-  TextureName,
   ZenGardenObject,
 } from "@/zen-garden";
 import { DEFAULT_ROCK_WAVE_SETTINGS, ZenGardenEditor } from "@/zen-garden";
 
-function useObservable<T>(
-  observable: {
-    subscribe: (fn: (v: T) => void) => { unsubscribe: () => void };
-  } | null,
-  initial: T
-): T {
-  const [value, setValue] = useState(initial);
+function useZenGardenEditor(canvas: HTMLCanvasElement | null) {
+  const [editor, setEditor] = useState<ZenGardenEditor | null>(null);
+  const [state, setState] = useState({
+    selectedRockId: null as string | null,
+    textureName: "gravel" as GroundTextureName,
+    ambientIntensity: 0.4,
+    sunIntensity: 0.8,
+    rocks: [] as ZenGardenObject[],
+  });
+
   useEffect(() => {
-    if (!observable) return;
-    const sub = observable.subscribe(setValue);
-    return () => sub.unsubscribe();
-  }, [observable]);
-  return value;
+    if (!canvas) return;
+    const ed = new ZenGardenEditor(canvas);
+    setEditor(ed);
+    return () => ed.dispose();
+  }, [canvas]);
+
+  useEffect(() => {
+    if (!editor) return;
+
+    const subs = [
+      editor.$selectedRockId.subscribe((v) =>
+        setState((s) => ({ ...s, selectedRockId: v }))
+      ),
+      editor.$groundTextureName.subscribe((v) =>
+        setState((s) => ({ ...s, textureName: v }))
+      ),
+      editor.$ambientIntensity.subscribe((v) =>
+        setState((s) => ({ ...s, ambientIntensity: v }))
+      ),
+      editor.$sunIntensity.subscribe((v) =>
+        setState((s) => ({ ...s, sunIntensity: v }))
+      ),
+      editor.$rocks.subscribe((v) => setState((s) => ({ ...s, rocks: v }))),
+    ];
+
+    return () => subs.forEach((s) => s.unsubscribe());
+  }, [editor]);
+
+  if (!editor) return null;
+
+  return {
+    editor,
+    ...state,
+    selectedRock: state.selectedRockId
+      ? editor.getRock(state.selectedRockId)
+      : null,
+  };
 }
 
 interface RockEditorProps {
@@ -106,10 +141,10 @@ function RockEditor({ rock, onUpdate, onDelete, onClose }: RockEditorProps) {
 }
 
 interface SettingsPanelProps {
-  textureName: TextureName;
+  textureName: GroundTextureName;
   ambientIntensity: number;
   sunIntensity: number;
-  onTextureChange: (name: TextureName) => void;
+  onTextureChange: (name: GroundTextureName) => void;
   onAmbientChange: (value: number) => void;
   onSunChange: (value: number) => void;
 }
@@ -133,7 +168,7 @@ function SettingsPanel({
           </label>
           <select
             value={textureName}
-            onChange={(e) => onTextureChange(e.target.value as TextureName)}
+            onChange={(e) => onTextureChange(e.target.value as GroundTextureName)}
             className="block w-full rounded-md border border-gray-300 px-2 py-1 text-sm text-black shadow-sm"
           >
             <option value="gravel">Gravel</option>
@@ -176,58 +211,35 @@ function SettingsPanel({
 }
 
 const ZenGardenPage: NextPage = () => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [editor, setEditor] = useState<ZenGardenEditor | null>(null);
-
-  // Initialize editor once canvas is ready
-  useEffect(() => {
-    if (!canvasRef.current) return;
-    const ed = new ZenGardenEditor(canvasRef.current);
-    setEditor(ed);
-    return () => ed.dispose();
-  }, []);
-
-  // Subscribe to observables
-  const selectedRockId = useObservable(editor?.$selectedRockId ?? null, null);
-  const textureName = useObservable(
-    editor?.$textureName ?? null,
-    "gravel" as TextureName
-  );
-  const ambientIntensity = useObservable(
-    editor?.$ambientIntensity ?? null,
-    0.4
-  );
-  const sunIntensity = useObservable(editor?.$sunIntensity ?? null, 0.8);
-
-  // Force re-render when rocks change (for getting updated rock data)
-  useObservable(editor?.$rocks ?? null, []);
-
-  const selectedRock = selectedRockId ? editor?.getRock(selectedRockId) : null;
+  const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
+  const ctx = useZenGardenEditor(canvas);
 
   return (
     <div className="relative h-screen w-screen">
-      <canvas ref={canvasRef} className="block" />
+      <canvas ref={setCanvas} className="w-full h-full" />
 
-      {editor && (
-        <SettingsPanel
-          textureName={textureName}
-          ambientIntensity={ambientIntensity}
-          sunIntensity={sunIntensity}
-          onTextureChange={(name) => editor.setTexture(name)}
-          onAmbientChange={(value) => editor.setAmbientIntensity(value)}
-          onSunChange={(value) => editor.setSunIntensity(value)}
-        />
-      )}
+      {ctx && (
+        <>
+          <SettingsPanel
+            textureName={ctx.textureName}
+            ambientIntensity={ctx.ambientIntensity}
+            sunIntensity={ctx.sunIntensity}
+            onTextureChange={(name) => ctx.editor.setGroundTexture(name)}
+            onAmbientChange={(value) => ctx.editor.setAmbientIntensity(value)}
+            onSunChange={(value) => ctx.editor.setSunIntensity(value)}
+          />
 
-      {selectedRock && editor && (
-        <RockEditor
-          rock={selectedRock}
-          onUpdate={(settings) =>
-            editor.updateRockSettings(selectedRock.id, settings)
-          }
-          onDelete={() => editor.deleteRock(selectedRock.id)}
-          onClose={() => editor.$selectedRockId.next(null)}
-        />
+          {ctx.selectedRock && (
+            <RockEditor
+              rock={ctx.selectedRock}
+              onUpdate={(settings) =>
+                ctx.editor.updateRockSettings(ctx.selectedRock!.id, settings)
+              }
+              onDelete={() => ctx.editor.deleteRock(ctx.selectedRock!.id)}
+              onClose={() => ctx.editor.$selectedRockId.next(null)}
+            />
+          )}
+        </>
       )}
     </div>
   );

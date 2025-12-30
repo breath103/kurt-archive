@@ -1,6 +1,6 @@
 import type { ZenGarden } from "./types";
 
-const STORAGE_KEY = "zen-garden";
+const STORAGE_KEY = "zen-garden-2";
 
 export function loadGarden(): ZenGarden {
   const stored = localStorage.getItem(STORAGE_KEY);
@@ -21,8 +21,12 @@ export function saveGarden(garden: ZenGarden): void {
 export function createDefaultGarden(): ZenGarden {
   return {
     objects: [],
-    plain: {
-      size: { x: 10, y: 10 },
+    ground: {
+      textureName: "gravel",
+      size: { x: 10, y: 7 },
+      tileSize: 2.0,
+      resolution: 2048,
+      displacementScale: 0.05,
     },
   };
 }

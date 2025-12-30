@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
 import type { GravelTextureSet } from "./materials";
-import type { ZenGardenObject } from "./types";
+import type { ZenGardenGround, ZenGardenObject } from "./types";
 import { DEFAULT_ROCK_WAVE_SETTINGS } from "./types";
 
 const MAX_ROCKS = 32;
@@ -116,18 +116,6 @@ export interface GroundTextureGenerator {
   dispose: () => void;
 }
 
-export interface GroundTextureOptions {
-  resolution: number;
-  gardenSize: { x: number; y: number };
-  tileSize: number;
-}
-
-const DEFAULT_OPTIONS: GroundTextureOptions = {
-  resolution: 1024,
-  gardenSize: { x: 10, y: 10 },
-  tileSize: 2.0,
-};
-
 /**
  * Creates a GPU-based texture generator that combines gravel textures with wave patterns.
  * Call update() whenever rocks change to regenerate the combined texture.
@@ -135,14 +123,12 @@ const DEFAULT_OPTIONS: GroundTextureOptions = {
 export function createGroundTextureGenerator(
   renderer: THREE.WebGLRenderer,
   gravelTextures: GravelTextureSet,
-  options: Partial<GroundTextureOptions> = {}
+  ground: ZenGardenGround
 ): GroundTextureGenerator {
-  const opts = { ...DEFAULT_OPTIONS, ...options };
-
   // Create render target for combined normal + displacement
   const renderTarget = new THREE.WebGLRenderTarget(
-    opts.resolution,
-    opts.resolution,
+    ground.resolution,
+    ground.resolution,
     {
       minFilter: THREE.LinearFilter,
       magFilter: THREE.LinearFilter,
@@ -165,9 +151,9 @@ export function createGroundTextureGenerator(
       gravelNormalMap: { value: gravelTextures.normalMap },
       gravelDisplacementMap: { value: gravelTextures.displacementMap },
       gardenSize: {
-        value: new THREE.Vector2(opts.gardenSize.x, opts.gardenSize.y),
+        value: new THREE.Vector2(ground.size.x, ground.size.y),
       },
-      tileSize: { value: opts.tileSize },
+      tileSize: { value: ground.tileSize },
       rockData: { value: rockDataArray },
       rockWaveSpacing: { value: rockWaveSpacingArray },
       rockCount: { value: 0 },

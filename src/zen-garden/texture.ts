@@ -19,7 +19,7 @@ export function generateGroundNormalMapTexture(
 ): THREE.CanvasTexture {
   const { microNoiseScale = 50, microNoiseStrength = 0.3 } = options;
 
-  const { size } = garden.plain;
+  const { size } = garden.ground;
   const width = Math.floor((size.x / 10) * 1024);
   const height = Math.floor((size.y / 10) * 1024);
 

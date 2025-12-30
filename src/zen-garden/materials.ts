@@ -1,5 +1,7 @@
 import * as THREE from "three";
 
+import type { ZenGardenGround } from "./types";
+
 export interface GravelTextureSet {
   colorMap: THREE.Texture;
   normalMap: THREE.Texture;
@@ -7,18 +9,6 @@ export interface GravelTextureSet {
   roughnessMap: THREE.Texture;
   aoMap: THREE.Texture;
 }
-
-export interface GroundMaterialOptions {
-  tileSize: number;
-  displacementScale: number;
-  gardenSize: { x: number; y: number };
-}
-
-const DEFAULT_OPTIONS: GroundMaterialOptions = {
-  tileSize: 2.0,
-  displacementScale: 0.1,
-  gardenSize: { x: 10, y: 10 },
-};
 
 // Ground vertex shader with combined displacement (from generated texture)
 const groundVertexShader = `
@@ -158,17 +148,15 @@ export interface GroundMaterial {
 export function createGroundMaterial(
   gravelTextures: GravelTextureSet,
   combinedTexture: THREE.Texture,
-  options: Partial<GroundMaterialOptions> = {}
+  ground: ZenGardenGround
 ): GroundMaterial {
-  const opts = { ...DEFAULT_OPTIONS, ...options };
-
   const uniforms: GroundMaterialUniforms = {
     lightDir: { value: new THREE.Vector3(5, 10, 5).normalize() },
     cameraPos: { value: new THREE.Vector3() },
-    tileSize: { value: opts.tileSize },
-    displacementScale: { value: opts.displacementScale },
+    tileSize: { value: ground.tileSize },
+    displacementScale: { value: ground.displacementScale },
     gardenSize: {
-      value: new THREE.Vector2(opts.gardenSize.x, opts.gardenSize.y),
+      value: new THREE.Vector2(ground.size.x, ground.size.y),
     },
     combinedMap: { value: combinedTexture },
     ambientIntensity: { value: 0.4 },
