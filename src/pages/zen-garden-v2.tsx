@@ -4,6 +4,7 @@ import type { Observable } from "rxjs";
 
 import { ZenGardenEditor } from "@/zen-garden-v2/editor";
 import { ZenGardenMoss } from "@/zen-garden-v2/moss";
+import { ZenGardenRakeStroke } from "@/zen-garden-v2/rake-stroke";
 import { ZenGardenRock } from "@/zen-garden-v2/rock";
 import { Vector2 } from "@/zen-garden-v2/vector2";
 
@@ -25,6 +26,8 @@ const ZenGardenV2Page: NextPage = () => {
           { x: -1, y: -1 },
           { x: -2, y: -1 },
         ]},
+        { id: "rake1", type: "rakeStroke", path: { type: "circle", center: { x: 2, y: 0 }, radius: 1 }, width: 0.5, numberOfForks: 3, forkDepth: 0.1 },
+        { id: "rake2", type: "rakeStroke", path: { type: "points", points: [{ x: -3, y: -1 }, { x: -2, y: 0 }, { x: -3, y: 1 }], closed: false }, width: 0.5, numberOfForks: 3, forkDepth: 0.1 },
       ],
     });
     setEditor(ed);
@@ -93,8 +96,17 @@ function ObjectPanel({ editor }: { editor: ZenGardenEditor }) {
 
   return (
     <div className="fixed right-4 top-4 bg-white text-black p-4 rounded-lg space-y-2">
-      {selected instanceof ZenGardenRock && <RockPanel rock={selected} />}
-      {selected instanceof ZenGardenMoss && <MossPanel moss={selected} />}
+      {(() => {
+        if (selected instanceof ZenGardenRock) {
+          return <RockPanel rock={selected} />;
+        } else if (selected instanceof ZenGardenMoss) {
+          return <MossPanel moss={selected} />;
+        } else if (selected instanceof ZenGardenRakeStroke) {
+          return <RakeStrokePanel rakeStroke={selected} />;
+        } else {
+          throw new Error("not implemented yet")
+        }
+      })()}
       <button
         onClick={onDelete}
         className="w-full px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
@@ -119,6 +131,25 @@ function MossPanel({ moss }: { moss: ZenGardenMoss }) {
     <>
       <h3 className="font-bold">Moss</h3>
       <p>ID: {moss.id}</p>
+    </>
+  );
+}
+
+function RakeStrokePanel({ rakeStroke }: { rakeStroke: ZenGardenRakeStroke }) {
+  return (
+    <>
+      <h3 className="font-bold">Rake Stroke</h3>
+      <p>ID: {rakeStroke.id}</p>
+      <label className="block">
+        Width:
+        <input
+          type="number"
+          step="0.1"
+          defaultValue={rakeStroke.width}
+          onChange={(e) => { rakeStroke.width = Number(e.target.value); }}
+          className="ml-2 w-20 px-2 py-1 bg-white/20 rounded"
+        />
+      </label>
     </>
   );
 }

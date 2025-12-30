@@ -103,7 +103,7 @@ export class ZenGardenEditor {
 
     if (pos) {
       const delta = pos.clone().sub(this.dragging.lastPos);
-      this.dragging.object.moveOnPlane(delta);
+      this.dragging.object.object.position.add(delta.toVector3());
       this.dragging.lastPos = pos;
     }
   };

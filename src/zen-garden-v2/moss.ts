@@ -16,47 +16,74 @@ const MOSS_Z = 0.01;
 
 export class ZenGardenMoss implements ZenGardenObject, Codable<ZenGardenMossEncoded> {
   readonly id: string;
-  private mesh: THREE.Mesh;
+  readonly object: ZenGardenMossObject;
   private points: Array<Vector2Encoded>;
 
-  constructor(encoded: ZenGardenMossEncoded, scene: THREE.Scene) {
+  constructor(encoded: ZenGardenMossEncoded) {
     this.id = encoded.id;
     this.points = [...encoded.polygonPath];
+    this.object = new ZenGardenMossObject(encoded.position, this.points);
+  }
+
+  setHighlight(highlighted: boolean): void {
+    this.object.setHighlight(highlighted);
+  }
+
+  testRaycast(raycaster: THREE.Raycaster): boolean {
+    return this.object.testRaycast(raycaster);
+  }
+
+  dispose(): void {
+    this.object.removeFromParent();
+    this.object.dispose();
+  }
+
+  serialize(): ZenGardenMossEncoded {
+    return {
+      id: this.id,
+      type: "moss",
+      position: { x: this.object.position.x, y: this.object.position.y },
+      polygonPath: this.points,
+    };
+  }
+}
+
+class ZenGardenMossObject extends THREE.Object3D {
+  private mesh: THREE.Mesh;
+  private material: THREE.MeshStandardMaterial;
+
+  constructor(position: Vector2Encoded, points: Array<Vector2Encoded>) {
+    super();
 
     const shape = new THREE.Shape();
-    if (this.points.length > 0) {
-      shape.moveTo(this.points[0].x, this.points[0].y);
-      for (let i = 1; i < this.points.length; i++) {
-        shape.lineTo(this.points[i].x, this.points[i].y);
+    if (points.length > 0) {
+      shape.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i++) {
+        shape.lineTo(points[i].x, points[i].y);
       }
       shape.closePath();
     }
 
     const geometry = new THREE.ShapeGeometry(shape);
-    const material = new THREE.MeshStandardMaterial({
+    this.material = new THREE.MeshStandardMaterial({
       color: 0x4a7c23,
       roughness: 0.8,
       side: THREE.DoubleSide,
     });
 
-    this.mesh = new THREE.Mesh(geometry, material);
-    this.mesh.position.copy(new Vector2(encoded.position).toVector3(MOSS_Z));
+    this.mesh = new THREE.Mesh(geometry, this.material);
+    this.add(this.mesh);
 
-    scene.add(this.mesh);
-  }
-
-  moveOnPlane(delta: Vector2): void {
-    this.mesh.position.add(delta.toVector3());
+    this.position.copy(new Vector2(position).toVector3(MOSS_Z));
   }
 
   setHighlight(highlighted: boolean): void {
-    const material = this.mesh.material as THREE.MeshStandardMaterial;
     if (highlighted) {
-      material.emissive.setHex(0xffaa00);
-      material.emissiveIntensity = 0.4;
+      this.material.emissive.setHex(0xffaa00);
+      this.material.emissiveIntensity = 0.4;
     } else {
-      material.emissive.setHex(0x000000);
-      material.emissiveIntensity = 0;
+      this.material.emissive.setHex(0x000000);
+      this.material.emissiveIntensity = 0;
     }
   }
 
@@ -65,17 +92,7 @@ export class ZenGardenMoss implements ZenGardenObject, Codable<ZenGardenMossEnco
   }
 
   dispose(): void {
-    this.mesh.removeFromParent();
     this.mesh.geometry.dispose();
-    (this.mesh.material as THREE.MeshStandardMaterial).dispose();
-  }
-
-  serialize(): ZenGardenMossEncoded {
-    return {
-      id: this.id,
-      type: "moss",
-      position: { x: this.mesh.position.x, y: this.mesh.position.y },
-      polygonPath: this.points,
-    };
+    this.material.dispose();
   }
 }

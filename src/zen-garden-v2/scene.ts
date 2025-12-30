@@ -6,6 +6,8 @@ import type { ZenGardenMossEncoded } from "./moss";
 import { ZenGardenMoss } from "./moss";
 import type { ZenGardenPlainEncoded } from "./plain";
 import { ZenGardenPlain } from "./plain";
+import type { ZenGardenRakeStrokeEncoded } from "./rake-stroke";
+import { ZenGardenRakeStroke } from "./rake-stroke";
 import type { ZenGardenRockEncoded } from "./rock";
 import { ZenGardenRock } from "./rock";
 import { Sun } from "./sun";
@@ -16,7 +18,7 @@ export class ZenGardenScene implements Codable<ZenGardenSceneEncoded> {
   private camera: THREE.PerspectiveCamera;
   private sun: Sun;
   readonly plain: ZenGardenPlain;
-  private objects: Map<string, ZenGardenRock | ZenGardenMoss>;
+  private objects: Map<string, ZenGardenRock | ZenGardenMoss | ZenGardenRakeStroke>;
   private raycaster = new THREE.Raycaster();
 
   constructor(encoded: ZenGardenSceneEncoded) {
@@ -46,17 +48,17 @@ export class ZenGardenScene implements Codable<ZenGardenSceneEncoded> {
     this.plain = new ZenGardenPlain(encoded.plain, this.scene);
 
     // Objects
-    this.objects = new Map(
-      encoded.objects
-        .map((e) => this.deserialize(e))
-        .map((o) => [o.id, o])
-    );
+    this.objects = new Map();
+    for (const e of encoded.objects) {
+      this.addObject(e);
+    }
   }
 
-  private deserialize(encoded: ZenGardenRockEncoded | ZenGardenMossEncoded): ZenGardenRock | ZenGardenMoss {
+  private deserialize(encoded: ZenGardenRockEncoded | ZenGardenMossEncoded | ZenGardenRakeStrokeEncoded): ZenGardenRock | ZenGardenMoss | ZenGardenRakeStroke {
     switch (encoded.type) {
-    case "rock": return new ZenGardenRock(encoded, this.scene);
-    case "moss": return new ZenGardenMoss(encoded, this.scene);
+    case "rock": return new ZenGardenRock(encoded);
+    case "moss": return new ZenGardenMoss(encoded);
+    case "rakeStroke": return new ZenGardenRakeStroke(encoded);
     }
   }
 
@@ -72,8 +74,9 @@ export class ZenGardenScene implements Codable<ZenGardenSceneEncoded> {
     this.sun.update();
   }
 
-  addObject(encoded: ZenGardenRockEncoded | ZenGardenMossEncoded): void {
+  addObject(encoded: ZenGardenRockEncoded | ZenGardenMossEncoded | ZenGardenRakeStrokeEncoded): void {
     const obj = this.deserialize(encoded);
+    this.scene.add(obj.object);
     this.objects.set(obj.id, obj);
   }
 
@@ -126,5 +129,5 @@ export class ZenGardenScene implements Codable<ZenGardenSceneEncoded> {
 
 export interface ZenGardenSceneEncoded {
   plain: ZenGardenPlainEncoded;
-  objects: Array<ZenGardenRockEncoded | ZenGardenMossEncoded>;
+  objects: Array<ZenGardenRockEncoded | ZenGardenMossEncoded | ZenGardenRakeStrokeEncoded>;
 }
