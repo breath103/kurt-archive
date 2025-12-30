@@ -1,8 +1,8 @@
-import * as THREE from 'three';
+import * as THREE from "three";
 
-import type { GravelTextureSet } from './materials';
-import type { ZenGardenObject } from './types';
-import { DEFAULT_ROCK_WAVE_SETTINGS } from './types';
+import type { GravelTextureSet } from "./materials";
+import type { ZenGardenObject } from "./types";
+import { DEFAULT_ROCK_WAVE_SETTINGS } from "./types";
 
 const MAX_ROCKS = 32;
 

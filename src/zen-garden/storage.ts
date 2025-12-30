@@ -1,6 +1,6 @@
-import type { ZenGarden } from './types';
+import type { ZenGarden } from "./types";
 
-const STORAGE_KEY = 'zen-garden';
+const STORAGE_KEY = "zen-garden";
 
 export function loadGarden(): ZenGarden {
   const stored = localStorage.getItem(STORAGE_KEY);

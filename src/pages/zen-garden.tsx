@@ -1,12 +1,12 @@
-import type { NextPage } from 'next';
-import { useEffect, useRef, useState } from 'react';
+import type { NextPage } from "next";
+import { useEffect, useRef, useState } from "react";
 
 import type {
   RockWaveSettings,
   TextureName,
   ZenGardenObject,
-} from '@/zen-garden';
-import { DEFAULT_ROCK_WAVE_SETTINGS, ZenGardenEditor } from '@/zen-garden';
+} from "@/zen-garden";
+import { DEFAULT_ROCK_WAVE_SETTINGS, ZenGardenEditor } from "@/zen-garden";
 
 function useObservable<T>(
   observable: {
@@ -105,25 +105,72 @@ function RockEditor({ rock, onUpdate, onDelete, onClose }: RockEditorProps) {
   );
 }
 
-interface TextureSelectorProps {
-  value: TextureName;
-  onChange: (name: TextureName) => void;
+interface SettingsPanelProps {
+  textureName: TextureName;
+  ambientIntensity: number;
+  sunIntensity: number;
+  onTextureChange: (name: TextureName) => void;
+  onAmbientChange: (value: number) => void;
+  onSunChange: (value: number) => void;
 }
 
-function TextureSelector({ value, onChange }: TextureSelectorProps) {
+function SettingsPanel({
+  textureName,
+  ambientIntensity,
+  sunIntensity,
+  onTextureChange,
+  onAmbientChange,
+  onSunChange,
+}: SettingsPanelProps) {
   return (
-    <div className="absolute left-4 top-4 rounded-lg bg-white/90 p-3 shadow-lg backdrop-blur">
-      <label className="mb-1 block text-sm font-medium text-gray-700">
-        Ground Texture
-      </label>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value as TextureName)}
-        className="block w-full rounded-md border border-gray-500 px-3 py-2 text-sm text-black shadow-sm focus:border-blue-500 focus:ring-blue-500"
-      >
-        <option value="gravel">Gravel</option>
-        <option value="grass">Grass</option>
-      </select>
+    <div className="absolute left-4 top-4 w-56 rounded-lg bg-white/90 p-3 shadow-lg backdrop-blur">
+      <h3 className="mb-3 font-semibold text-gray-800">Settings</h3>
+
+      <div className="space-y-3">
+        <div>
+          <label className="mb-1 block text-sm text-gray-600">
+            Ground Texture
+          </label>
+          <select
+            value={textureName}
+            onChange={(e) => onTextureChange(e.target.value as TextureName)}
+            className="block w-full rounded-md border border-gray-300 px-2 py-1 text-sm text-black shadow-sm"
+          >
+            <option value="gravel">Gravel</option>
+            <option value="grass">Grass</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm text-gray-600">
+            Ambient: {ambientIntensity.toFixed(2)}
+          </label>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.05"
+            value={ambientIntensity}
+            onChange={(e) => onAmbientChange(parseFloat(e.target.value))}
+            className="w-full"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm text-gray-600">
+            Sun: {sunIntensity.toFixed(2)}
+          </label>
+          <input
+            type="range"
+            min="0"
+            max="2"
+            step="0.05"
+            value={sunIntensity}
+            onChange={(e) => onSunChange(parseFloat(e.target.value))}
+            className="w-full"
+          />
+        </div>
+      </div>
     </div>
   );
 }
@@ -144,8 +191,13 @@ const ZenGardenPage: NextPage = () => {
   const selectedRockId = useObservable(editor?.$selectedRockId ?? null, null);
   const textureName = useObservable(
     editor?.$textureName ?? null,
-    'gravel' as TextureName
+    "gravel" as TextureName
   );
+  const ambientIntensity = useObservable(
+    editor?.$ambientIntensity ?? null,
+    0.4
+  );
+  const sunIntensity = useObservable(editor?.$sunIntensity ?? null, 0.8);
 
   // Force re-render when rocks change (for getting updated rock data)
   useObservable(editor?.$rocks ?? null, []);
@@ -157,9 +209,13 @@ const ZenGardenPage: NextPage = () => {
       <canvas ref={canvasRef} className="block" />
 
       {editor && (
-        <TextureSelector
-          value={textureName}
-          onChange={(name) => editor.setTexture(name)}
+        <SettingsPanel
+          textureName={textureName}
+          ambientIntensity={ambientIntensity}
+          sunIntensity={sunIntensity}
+          onTextureChange={(name) => editor.setTexture(name)}
+          onAmbientChange={(value) => editor.setAmbientIntensity(value)}
+          onSunChange={(value) => editor.setSunIntensity(value)}
         />
       )}
 

@@ -7,7 +7,7 @@ export interface ZenGarden {
 
 export interface ZenGardenObject {
   id: string;
-  type: 'rock';
+  type: "rock";
   position: { x: number; y: number };
   waveSettings?: RockWaveSettings;
 }

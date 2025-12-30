@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import * as THREE from "three";
 
 export interface GravelTextureSet {
   colorMap: THREE.Texture;
@@ -56,6 +56,8 @@ const groundFragmentShader = `
   uniform vec3 cameraPos;
   uniform float tileSize;
   uniform vec2 gardenSize;
+  uniform float ambientIntensity;
+  uniform float sunIntensity;
   varying vec3 vWorldPos;
   varying vec2 vUv;
 
@@ -79,10 +81,9 @@ const groundFragmentShader = `
     vec3 halfDir = normalize(lightDirection + viewDir);
     float shininess = mix(128.0, 4.0, roughness);
     float specular = pow(max(dot(normal, halfDir), 0.0), shininess);
-    specular *= (1.0 - roughness) * 0.3;
+    specular *= (1.0 - roughness) * 0.3 * sunIntensity;
 
-    float ambient = 0.4;
-    vec3 finalColor = color * (ambient + diffuse * 0.6) * ao + vec3(specular);
+    vec3 finalColor = color * (ambientIntensity + diffuse * sunIntensity) * ao + vec3(specular);
 
     gl_FragColor = vec4(finalColor, 1.0);
   }
@@ -113,11 +114,11 @@ export async function loadGravelTextures(
 
   const [colorMap, normalMap, displacementMap, roughnessMap, aoMap] =
     await Promise.all([
-      loadTexture('color'),
-      loadTexture('normal'),
-      loadTexture('displacement'),
-      loadTexture('roughness'),
-      loadTexture('ao'),
+      loadTexture("color"),
+      loadTexture("normal"),
+      loadTexture("displacement"),
+      loadTexture("roughness"),
+      loadTexture("ao"),
     ]);
 
   return { colorMap, normalMap, displacementMap, roughnessMap, aoMap };
@@ -141,6 +142,8 @@ export interface GroundMaterialUniforms {
   displacementScale: { value: number };
   gardenSize: { value: THREE.Vector2 };
   combinedMap: { value: THREE.Texture | null };
+  ambientIntensity: { value: number };
+  sunIntensity: { value: number };
 }
 
 export interface GroundMaterial {
@@ -168,6 +171,8 @@ export function createGroundMaterial(
       value: new THREE.Vector2(opts.gardenSize.x, opts.gardenSize.y),
     },
     combinedMap: { value: combinedTexture },
+    ambientIntensity: { value: 0.4 },
+    sunIntensity: { value: 0.8 },
   };
 
   const material = new THREE.ShaderMaterial({
@@ -183,6 +188,8 @@ export function createGroundMaterial(
       tileSize: uniforms.tileSize,
       gardenSize: uniforms.gardenSize,
       displacementScale: uniforms.displacementScale,
+      ambientIntensity: uniforms.ambientIntensity,
+      sunIntensity: uniforms.sunIntensity,
     },
   });
 

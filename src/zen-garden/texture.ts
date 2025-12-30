@@ -1,7 +1,7 @@
-import * as THREE from 'three';
+import * as THREE from "three";
 
-import type { RockWaveSettings, ZenGarden } from './types';
-import { DEFAULT_ROCK_WAVE_SETTINGS } from './types';
+import type { RockWaveSettings, ZenGarden } from "./types";
+import { DEFAULT_ROCK_WAVE_SETTINGS } from "./types";
 
 const TEXTURE_RESOLUTION = 512; // pixels for wave disc
 
@@ -23,11 +23,11 @@ export function generateGroundNormalMapTexture(
   const width = Math.floor((size.x / 10) * 1024);
   const height = Math.floor((size.y / 10) * 1024);
 
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
 
-  const ctx = canvas.getContext('2d')!;
+  const ctx = canvas.getContext("2d")!;
   const imageData = ctx.createImageData(width, height);
   const { data } = imageData;
 
@@ -92,11 +92,11 @@ export function generateRockWaveTexture(waveSettings?: RockWaveSettings): {
   const diameter =
     (settings.radius + settings.waveCount * settings.waveSpacing) * 2;
 
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = TEXTURE_RESOLUTION;
   canvas.height = TEXTURE_RESOLUTION;
 
-  const ctx = canvas.getContext('2d')!;
+  const ctx = canvas.getContext("2d")!;
   const imageData = ctx.createImageData(TEXTURE_RESOLUTION, TEXTURE_RESOLUTION);
   const { data } = imageData;
 
