@@ -11,7 +11,7 @@ export type ZenGardenRockEncoded = {
   position: Vector2Encoded;
 };
 
-const ROCK_Y = 0.15;
+const ROCK_Z = 0.15;
 
 export class ZenGardenRock implements ZenGardenObject, Codable<ZenGardenRockEncoded> {
   readonly id: string;
@@ -21,13 +21,14 @@ export class ZenGardenRock implements ZenGardenObject, Codable<ZenGardenRockEnco
     this.id = encoded.id;
 
     const geometry = new THREE.SphereGeometry(0.3, 8, 6);
-    geometry.scale(1, 0.6, 1);
+    geometry.scale(1, 1, 0.6);
     const material = new THREE.MeshStandardMaterial({
       color: 0x666666,
       roughness: 0.9,
     });
     this.mesh = new THREE.Mesh(geometry, material);
-    this.mesh.position.copy(new Vector2(encoded.position).toVector3(ROCK_Y));
+    this.mesh.position.copy(new Vector2(encoded.position).toVector3(ROCK_Z));
+    this.mesh.castShadow = true;
 
     scene.add(this.mesh);
   }
@@ -51,11 +52,17 @@ export class ZenGardenRock implements ZenGardenObject, Codable<ZenGardenRockEnco
     return raycaster.intersectObject(this.mesh).length > 0;
   }
 
+  dispose(): void {
+    this.mesh.removeFromParent();
+    this.mesh.geometry.dispose();
+    (this.mesh.material as THREE.MeshStandardMaterial).dispose();
+  }
+
   serialize(): ZenGardenRockEncoded {
     return {
       id: this.id,
       type: "rock",
-      position: { x: this.mesh.position.x, y: this.mesh.position.z },
+      position: { x: this.mesh.position.x, y: this.mesh.position.y },
     };
   }
 }

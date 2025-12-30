@@ -9,12 +9,12 @@ export class Vector2 extends THREE.Vector2 implements Codable<Vector2Encoded> {
     super(encoded.x, encoded.y);
   }
 
-  toVector3(y = 0): THREE.Vector3 {
-    return new THREE.Vector3(this.x, y, this.y);
+  toVector3(z = 0): THREE.Vector3 {
+    return new THREE.Vector3(this.x, this.y, z);
   }
 
-  clone(): Vector2 {
-    return new Vector2({ x: this.x, y: this.y });
+  override clone(): this {
+    return new Vector2({ x: this.x, y: this.y }) as this;
   }
 
   serialize(): Vector2Encoded {

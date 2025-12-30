@@ -12,7 +12,7 @@ export type ZenGardenMossEncoded = {
   polygonPath: Array<Vector2Encoded>;
 };
 
-const MOSS_Y = 0.01;
+const MOSS_Z = 0.01;
 
 export class ZenGardenMoss implements ZenGardenObject, Codable<ZenGardenMossEncoded> {
   readonly id: string;
@@ -25,9 +25,9 @@ export class ZenGardenMoss implements ZenGardenObject, Codable<ZenGardenMossEnco
 
     const shape = new THREE.Shape();
     if (this.points.length > 0) {
-      shape.moveTo(this.points[0].x, -this.points[0].y);
+      shape.moveTo(this.points[0].x, this.points[0].y);
       for (let i = 1; i < this.points.length; i++) {
-        shape.lineTo(this.points[i].x, -this.points[i].y);
+        shape.lineTo(this.points[i].x, this.points[i].y);
       }
       shape.closePath();
     }
@@ -40,8 +40,7 @@ export class ZenGardenMoss implements ZenGardenObject, Codable<ZenGardenMossEnco
     });
 
     this.mesh = new THREE.Mesh(geometry, material);
-    this.mesh.rotation.x = -Math.PI / 2;
-    this.mesh.position.copy(new Vector2(encoded.position).toVector3(MOSS_Y));
+    this.mesh.position.copy(new Vector2(encoded.position).toVector3(MOSS_Z));
 
     scene.add(this.mesh);
   }
@@ -65,11 +64,17 @@ export class ZenGardenMoss implements ZenGardenObject, Codable<ZenGardenMossEnco
     return raycaster.intersectObject(this.mesh).length > 0;
   }
 
+  dispose(): void {
+    this.mesh.removeFromParent();
+    this.mesh.geometry.dispose();
+    (this.mesh.material as THREE.MeshStandardMaterial).dispose();
+  }
+
   serialize(): ZenGardenMossEncoded {
     return {
       id: this.id,
       type: "moss",
-      position: { x: this.mesh.position.x, y: this.mesh.position.z },
+      position: { x: this.mesh.position.x, y: this.mesh.position.y },
       polygonPath: this.points,
     };
   }

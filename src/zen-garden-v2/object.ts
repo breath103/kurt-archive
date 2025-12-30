@@ -7,4 +7,5 @@ export interface ZenGardenObject {
   setHighlight(highlighted: boolean): void;
   testRaycast(raycaster: THREE.Raycaster): boolean;
   moveOnPlane(delta: Vector2): void;
+  dispose(): void;
 }

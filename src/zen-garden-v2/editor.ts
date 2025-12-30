@@ -1,5 +1,5 @@
 import type { Subscription } from "rxjs";
-import { BehaviorSubject, pairwise, startWith } from "rxjs";
+import { BehaviorSubject, type Observable, pairwise, startWith } from "rxjs";
 import * as THREE from "three";
 
 import type { ZenGardenObject } from "./object";
@@ -7,11 +7,14 @@ import type { ZenGardenSceneEncoded } from "./scene";
 import { ZenGardenScene } from "./scene";
 import type { Vector2 } from "./vector2";
 
+export type EditorMode = null | "addRock" | "addMoss";
+
 export class ZenGardenEditor {
   private renderer: THREE.WebGLRenderer;
-  private scene: ZenGardenScene;
+  readonly scene: ZenGardenScene;
   private canvas: HTMLCanvasElement;
-  private $selectedObject = new BehaviorSubject<ZenGardenObject | null>(null);
+  private _$selectedObject = new BehaviorSubject<ZenGardenObject | null>(null);
+  private _$mode = new BehaviorSubject<EditorMode>(null);
   private subscriptions: Subscription[] = [];
   private disposed = false;
   private dragging: { object: ZenGardenObject; lastPos: Vector2 } | null = null;
@@ -22,6 +25,7 @@ export class ZenGardenEditor {
       const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.shadowMap.enabled = true;
       return renderer;
     })();
 
@@ -29,7 +33,7 @@ export class ZenGardenEditor {
 
     // Selection highlight logic
     this.subscriptions.push(
-      this.$selectedObject.pipe(
+      this._$selectedObject.pipe(
         startWith(null),
         pairwise()
       ).subscribe(([prev, curr]) => {
@@ -55,14 +59,39 @@ export class ZenGardenEditor {
 
   private handleMouseDown = (event: MouseEvent): void => {
     const screen = this.screenCoords(event);
-    const hit = this.scene.hitTest(screen.x, screen.y);
+    const pos = this.scene.screenToPlaneCoordinate(screen.x, screen.y);
 
-    if (hit) {
-      const pos = this.scene.screenToPlaneCoordinate(screen.x, screen.y);
-      if (pos) {
-        this.dragging = { object: hit, lastPos: pos };
-        this.$selectedObject.next(hit);
+    const mode = this._$mode.value;
+    if (pos) {
+      const id = crypto.randomUUID();
+      switch (mode) {
+      case null:
+        break;
+      case "addRock":
+        this.scene.addObject({ id, type: "rock", position: pos.serialize() });
+        this._$mode.next(null);
+        return;
+      case "addMoss":
+        this.scene.addObject({
+          id,
+          type: "moss",
+          position: pos.serialize(),
+          polygonPath: [
+            { x: -0.5, y: -0.5 },
+            { x: 0.5, y: -0.5 },
+            { x: 0.5, y: 0.5 },
+            { x: -0.5, y: 0.5 },
+          ],
+        });
+        this._$mode.next(null);
+        return;
       }
+    }
+
+    const hit = this.scene.hitTest(screen.x, screen.y);
+    if (hit && pos) {
+      this.dragging = { object: hit, lastPos: pos };
+      this._$selectedObject.next(hit);
     }
   };
 
@@ -91,8 +120,28 @@ export class ZenGardenEditor {
   private animate = (): void => {
     if (this.disposed) return;
     requestAnimationFrame(this.animate);
+    this.scene.update();
     this.renderer.render(this.scene.threeScene, this.scene.threeCamera);
   };
+
+  get $selectedObject(): Observable<ZenGardenObject | null> {
+    return this._$selectedObject;
+  }
+
+  get $mode(): Observable<EditorMode> {
+    return this._$mode;
+  }
+
+  setMode(mode: EditorMode): void {
+    this._$mode.next(mode);
+  }
+
+  deleteObject(id: string): void {
+    if (this._$selectedObject.value?.id === id) {
+      this._$selectedObject.next(null);
+    }
+    this.scene.deleteObject(id);
+  }
 
   dispose(): void {
     this.disposed = true;

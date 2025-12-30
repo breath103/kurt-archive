@@ -4,17 +4,25 @@ import type { Codable } from "./codable";
 import type { ZenGardenObject } from "./object";
 import type { ZenGardenMossEncoded } from "./moss";
 import { ZenGardenMoss } from "./moss";
+import type { ZenGardenPlainEncoded } from "./plain";
+import { ZenGardenPlain } from "./plain";
 import type { ZenGardenRockEncoded } from "./rock";
 import { ZenGardenRock } from "./rock";
+import { Sun } from "./sun";
 import { Vector2 } from "./vector2";
 
 export class ZenGardenScene implements Codable<ZenGardenSceneEncoded> {
   private scene: THREE.Scene;
   private camera: THREE.PerspectiveCamera;
+  private sun: Sun;
+  readonly plain: ZenGardenPlain;
   private objects: Map<string, ZenGardenRock | ZenGardenMoss>;
   private raycaster = new THREE.Raycaster();
 
   constructor(encoded: ZenGardenSceneEncoded) {
+    // Z-up coordinate system
+    THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
+
     this.scene = new THREE.Scene();
 
     this.camera = new THREE.PerspectiveCamera(
@@ -23,28 +31,33 @@ export class ZenGardenScene implements Codable<ZenGardenSceneEncoded> {
       0.1,
       1000
     );
-    this.camera.position.set(0, 10, 0);
+    this.camera.position.set(0, 0, 10);
+    this.camera.up.set(0, 1, 0);
     this.camera.lookAt(0, 0, 0);
 
     // Lights
     const ambient = new THREE.AmbientLight(0xffffff, 0.5);
     this.scene.add(ambient);
+    
+    this.sun = new Sun();
+    this.scene.add(this.sun);
 
-    const sun = new THREE.DirectionalLight(0xffffff, 1);
-    sun.position.set(5, 10, 5);
-    this.scene.add(sun);
+    // Plain
+    this.plain = new ZenGardenPlain(encoded.plain, this.scene);
 
     // Objects
     this.objects = new Map(
       encoded.objects
-        .map((e) => {
-          switch (e.type) {
-          case "rock": return new ZenGardenRock(e, this.scene);
-          case "moss": return new ZenGardenMoss(e, this.scene);
-          }
-        })
+        .map((e) => this.deserialize(e))
         .map((o) => [o.id, o])
     );
+  }
+
+  private deserialize(encoded: ZenGardenRockEncoded | ZenGardenMossEncoded): ZenGardenRock | ZenGardenMoss {
+    switch (encoded.type) {
+    case "rock": return new ZenGardenRock(encoded, this.scene);
+    case "moss": return new ZenGardenMoss(encoded, this.scene);
+    }
   }
 
   get threeScene(): THREE.Scene {
@@ -53,6 +66,23 @@ export class ZenGardenScene implements Codable<ZenGardenSceneEncoded> {
 
   get threeCamera(): THREE.PerspectiveCamera {
     return this.camera;
+  }
+
+  update(): void {
+    this.sun.update();
+  }
+
+  addObject(encoded: ZenGardenRockEncoded | ZenGardenMossEncoded): void {
+    const obj = this.deserialize(encoded);
+    this.objects.set(obj.id, obj);
+  }
+
+  deleteObject(id: string): void {
+    const obj = this.objects.get(id);
+    if (obj) {
+      obj.dispose();
+      this.objects.delete(id);
+    }
   }
 
   handleResize(width: number, height: number): void {
@@ -77,22 +107,24 @@ export class ZenGardenScene implements Codable<ZenGardenSceneEncoded> {
     const mouse = new THREE.Vector2(screenX, screenY);
     this.raycaster.setFromCamera(mouse, this.camera);
 
-    const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+    const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
     const intersection = new THREE.Vector3();
 
     if (this.raycaster.ray.intersectPlane(plane, intersection)) {
-      return new Vector2({ x: intersection.x, y: intersection.z });
+      return new Vector2({ x: intersection.x, y: intersection.y });
     }
     return null;
   }
 
   serialize(): ZenGardenSceneEncoded {
     return {
+      plain: this.plain.serialize(),
       objects: Array.from(this.objects.values()).map((object) => object.serialize()),
     };
   }
 }
 
 export interface ZenGardenSceneEncoded {
+  plain: ZenGardenPlainEncoded;
   objects: Array<ZenGardenRockEncoded | ZenGardenMossEncoded>;
 }
