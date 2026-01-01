@@ -1,19 +1,21 @@
+import type { Observable } from "rxjs";
+import { BehaviorSubject, map, merge, of, startWith, switchMap } from "rxjs";
 import * as THREE from "three";
+import z from "zod";
 
 import type { Codable } from "./codable";
+import type { ReactiveNodeContext } from "./nodes/node";
+import { MapNode, PipeNode } from "./nodes/pipe-node";
+import { PlainDisplacementNode } from "./nodes/plain-displacement-node";
+import { PlainMaterialNode } from "./nodes/plain-material-node";
+import { PlainNormalNode } from "./nodes/plain-normal-node";
+import { StaticPlainGeometryNode } from "./nodes/static-plain-geometry-node";
+import { TextureSetNode } from "./nodes/texture-set-node";
+import { ValueNode } from "./nodes/value-node";
 import type { ZenGardenRakeStroke } from "./rake-stroke";
+import { Subscriptions } from "./utils/subscriptions";
 import type { Vector2Encoded } from "./vector2";
 import { Vector2 } from "./vector2";
-import type { Observable } from "rxjs";
-import { BehaviorSubject, combineLatest, map, merge, of, shareReplay, startWith, switchMap } from "rxjs";
-import { Subscriptions } from "./utils/subscriptions";
-import type { ReactiveNodeContext } from "./nodes/node";
-import { TextureSetNode } from "./nodes/texture-set-node";
-import { PlainDisplacementNode } from "./nodes/plain-displacement-node";
-import { PlainNormalNode } from "./nodes/plain-normal-node";
-import { PlainMaterialNode } from "./nodes/plain-material-node";
-import { StaticPlainGeometryNode } from "./nodes/static-plain-geometry-node";
-import { MapNode, PipeNode, RxNode } from "./nodes/pipe-node";
 // TODO: Fix stitching for AdaptivePlaneGeometryNode then switch back
 // import { AdaptivePlaneGeometryNode } from "./nodes/adaptive-plane-geometry-node";
 
@@ -41,14 +43,16 @@ export class ZenGardenPlain implements Codable<ZenGardenPlainEncoded>, Disposabl
 
     this.$size = new BehaviorSubject(new Vector2(encoded.size));
     this.$textureName = new BehaviorSubject(encoded.textureName);
-    // const $tileSize = new BehaviorSubject(3);
-    const $tileSize = new RxNode(context, of(3));
 
+    const $tileSize = new ValueNode(z.int().min(1).max(10), 90);
+    
     // Calculate texture repeat
-    const $textureRepeat = combineLatest([this.$size, $tileSize]).pipe(
-      map(([plainSize, tileSize]) => plainSize.clone().divideScalar(tileSize)),
-      shareReplay(1),
-    );
+    const $textureRepeat = new MapNode(context, {
+      size: this.$size,
+      tileSize: $tileSize,
+    }, "textureRepeat", ({ size, tileSize }) => {
+      return size.clone().divideScalar(tileSize);
+    });
 
     // Rakes that emits whenever any rake changes
     const $rakesChanged = $rakes.pipe(
@@ -65,56 +69,17 @@ export class ZenGardenPlain implements Codable<ZenGardenPlainEncoded>, Disposabl
     // Node graph
     const textureSetNode = new TextureSetNode(context, { name: this.$textureName });
 
-    // const repeatedTextureSetNode = new PipeNode(context, {  })
-
-    // const mappedTextureNode = new MapTextureSetNode(context, {
-    //   textureData: textureSetNode,
-    //   repeat: $textureRepeat,
-    //   wrapS: new RxNode(context, of(THREE.RepeatWrapping)),
-    //   wrapT: new RxNode(context, of(THREE.RepeatWrapping)),
-    // });
-
     const mappedTextureNode = new MapNode(context, {
       textureSet: textureSetNode,
-      repeat: $textureRepeat,
-      wrap: new RxNode(context, of(THREE.RepeatWrapping)),
-    }, "TiledTextureSetNode", ({ textureSet, repeat, wrap }) => {
+      repeat: $textureRepeat
+    }, "TiledTextureSetNode", ({ textureSet, repeat }) => {
       for (const texture of textureSet) {
         texture.repeat.set(repeat.x, repeat.y);
-        texture.wrapS = wrap;
-        texture.wrapT = wrap;
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
       }
       return textureSet;
     });
-
-    // const mappedTextureNode = new MapTextureSetNode(context, {
-    //   textureData: textureSetNode,
-    //   repeat: $textureRepeat,
-    //   wrapS: new RxNode(context, of(THREE.RepeatWrapping)),
-    //   wrapT: new RxNode(context, of(THREE.RepeatWrapping)),
-    // });
-    
-    
-    // export class MapTextureSetNode extends ReactiveNode<MapTextureSetNodeInputs, TextureSetData> {
-    //   constructor(
-    //     context: ReactiveNodeContext,
-    //     inputs: ReactiveNodeInputs<MapTextureSetNodeInputs>,
-    //   ) {
-    //     super(context, inputs);
-    //   }
-    
-    //   protected process(_context: ReactiveNodeContext, { textureData, repeat, wrapS, wrapT }: MapTextureSetNodeInputs): TextureSetData {
-    //     Object.values(textureData).forEach((texture) => {
-    //       if (repeat) texture.repeat.set(repeat.x, repeat.y);
-    //       if (wrapS !== undefined) texture.wrapS = wrapS;
-    //       if (wrapT !== undefined) texture.wrapT = wrapT;
-    //     });
-    //     return textureData;
-    //   }
-    
-    //   dispose(): void {}
-    // }
-    
 
     const baseDisplacementNode = new PipeNode(context, textureSetNode, t => t.displacement);
 

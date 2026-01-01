@@ -2,9 +2,9 @@ import { BehaviorSubject, map } from "rxjs";
 import * as THREE from "three";
 
 import type { Codable } from "./codable";
-import type { ZenGardenObject } from "./object";
 import type { ZenGardenMossEncoded } from "./moss";
 import { ZenGardenMoss } from "./moss";
+import type { ZenGardenObject } from "./object";
 import type { ZenGardenPlainEncoded } from "./plain";
 import { ZenGardenPlain } from "./plain";
 import type { ZenGardenRakeStrokeEncoded } from "./rake-stroke";

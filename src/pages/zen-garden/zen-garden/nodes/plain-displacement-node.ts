@@ -1,9 +1,9 @@
 import * as THREE from "three";
 
 import type { ZenGardenRakeStroke } from "../rake-stroke";
+import type { Vector2 } from "../vector2";
 import type { ReactiveNodeContext, ReactiveNodeInputs } from "./node";
 import { ReactiveNode } from "./node";
-import type { Vector2 } from "../vector2";
 
 type PlainDisplacementNodeInputs = {
   baseMap: THREE.Texture;
