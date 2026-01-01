@@ -3,7 +3,7 @@ import * as THREE from "three";
 import type { ReactiveNodeContext } from "./node";
 import { ReactiveNode } from "./node";
 
-export class TextureSetData {
+export class TextureSetData implements Iterable<THREE.Texture> {
   constructor(
     readonly ao: THREE.Texture,
     readonly color: THREE.Texture,
@@ -11,6 +11,10 @@ export class TextureSetData {
     readonly normal: THREE.Texture,
     readonly roughness: THREE.Texture,
   ) {}
+
+  [Symbol.iterator](): ArrayIterator<THREE.Texture> {
+    return [this.ao, this.color, this.displacement, this.normal, this.roughness][Symbol.iterator]();
+  }
 }
 
 type TextureSetNodeInputs = { name: string };

@@ -1,9 +1,26 @@
 import type { Observable } from "rxjs";
 
-import type { ReactiveNodeContext } from "./node";
+import type { ReactiveNodeContext, ReactiveNodeInputs } from "./node";
 import { ReactiveNode } from "./node";
 
 type PipeNodeInputs<T> = { source: T };
+
+export class MapNode<Inputs extends Record<string, unknown>, Output> extends ReactiveNode<Inputs, Output> {
+  constructor(
+    context: ReactiveNodeContext, 
+    inputs: ReactiveNodeInputs<Inputs>,
+    readonly name: string,   
+    readonly map: (inputs: Inputs) => Output | Observable<Output> | Promise<Output>
+  ) {
+    super(context, inputs);
+  }
+
+  protected process(context: ReactiveNodeContext, inputs: Inputs): Output | Observable<Output> | Promise<Output> {
+    return this.map(inputs);
+  }
+
+  dispose(): void {}
+}
 
 export class PipeNode<T, U> extends ReactiveNode<PipeNodeInputs<T>, U> {
   constructor(

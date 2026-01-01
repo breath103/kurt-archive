@@ -32,6 +32,23 @@ if (value instanceof Foo) {
 }
 ```
 
+## Use instanceof, not custom type guards
+
+Just use `instanceof` for type checking. Don't create marker properties or type guard functions.
+
+```typescript
+// Bad - unnecessary marker and type guard
+class Foo {
+  readonly isFoo = true as const;
+}
+function isFoo(x: unknown): x is Foo {
+  return (x as Foo).isFoo === true;
+}
+
+// Good - just use instanceof
+if (x instanceof Foo) { ... }
+```
+
 ## Prefer concise patterns
 
 Use nullish coalescing assignment for cached lazy initialization:

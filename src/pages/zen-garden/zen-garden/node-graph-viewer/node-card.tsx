@@ -13,9 +13,9 @@ export function NodeCard({ info, renderer }: NodeCardProps) {
   const [output, setOutput] = useState<unknown>(null);
 
   useEffect(() => {
-    const sub = info.node.subscribe(setOutput);
+    const sub = info.output.subscribe(setOutput);
     return () => sub.unsubscribe();
-  }, [info.node]);
+  }, [info.output]);
 
   const inputNodes = Array.from(info.inputs.entries()).filter(([, v]) => v !== null) as [string, NodeInfo][];
 
@@ -28,7 +28,7 @@ export function NodeCard({ info, renderer }: NodeCardProps) {
         </div>
       )}
       <div className="pt-1">
-        <OutputPreview value={output} renderer={renderer} />
+        <OutputPreview value={output} node={info.output} renderer={renderer} />
       </div>
     </div>
   );

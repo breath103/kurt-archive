@@ -9,12 +9,11 @@ import { BehaviorSubject, combineLatest, map, merge, of, shareReplay, startWith,
 import { Subscriptions } from "./utils/subscriptions";
 import type { ReactiveNodeContext } from "./nodes/node";
 import { TextureSetNode } from "./nodes/texture-set-node";
-import { MapTextureSetNode } from "./nodes/map-texture-set-node";
 import { PlainDisplacementNode } from "./nodes/plain-displacement-node";
 import { PlainNormalNode } from "./nodes/plain-normal-node";
 import { PlainMaterialNode } from "./nodes/plain-material-node";
 import { StaticPlainGeometryNode } from "./nodes/static-plain-geometry-node";
-import { PipeNode, RxNode } from "./nodes/pipe-node";
+import { MapNode, PipeNode, RxNode } from "./nodes/pipe-node";
 // TODO: Fix stitching for AdaptivePlaneGeometryNode then switch back
 // import { AdaptivePlaneGeometryNode } from "./nodes/adaptive-plane-geometry-node";
 
@@ -68,12 +67,33 @@ export class ZenGardenPlain implements Codable<ZenGardenPlainEncoded>, Disposabl
 
     // const repeatedTextureSetNode = new PipeNode(context, {  })
 
-    const mappedTextureNode = new MapTextureSetNode(context, {
-      textureData: textureSetNode,
+    // const mappedTextureNode = new MapTextureSetNode(context, {
+    //   textureData: textureSetNode,
+    //   repeat: $textureRepeat,
+    //   wrapS: new RxNode(context, of(THREE.RepeatWrapping)),
+    //   wrapT: new RxNode(context, of(THREE.RepeatWrapping)),
+    // });
+
+    const mappedTextureNode = new MapNode(context, {
+      textureSet: textureSetNode,
       repeat: $textureRepeat,
-      wrapS: of(THREE.RepeatWrapping),
-      wrapT: of(THREE.RepeatWrapping),
+      wrap: new RxNode(context, of(THREE.RepeatWrapping)),
+    }, "TiledTextureSetNode", ({ textureSet, repeat, wrap }) => {
+      for (const texture of textureSet) {
+        texture.repeat.set(repeat.x, repeat.y);
+        texture.wrapS = wrap;
+        texture.wrapT = wrap;
+      }
+      return textureSet;
     });
+
+    // const mappedTextureNode = new MapTextureSetNode(context, {
+    //   textureData: textureSetNode,
+    //   repeat: $textureRepeat,
+    //   wrapS: new RxNode(context, of(THREE.RepeatWrapping)),
+    //   wrapT: new RxNode(context, of(THREE.RepeatWrapping)),
+    // });
+    
     
     // export class MapTextureSetNode extends ReactiveNode<MapTextureSetNodeInputs, TextureSetData> {
     //   constructor(

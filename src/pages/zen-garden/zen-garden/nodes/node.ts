@@ -15,8 +15,6 @@ export abstract class ReactiveNode<Inputs extends Record<string, unknown>, Outpu
 
   // Debug: store inputs for graph traversal
   readonly debugInputs: Map<string, Observable<unknown>>;
-  // Debug: marker to identify ReactiveNode instances
-  readonly isReactiveNode = true as const;
 
   constructor(context: ReactiveNodeContext, inputs: ReactiveNodeInputs<Inputs>) {
     const keys = Object.keys(inputs) as (keyof Inputs)[];
@@ -71,8 +69,3 @@ export abstract class ReactiveNode<Inputs extends Record<string, unknown>, Outpu
 }
 
 export type ReactiveNodeInputs<Inputs extends Record<string, unknown>> = { [K in keyof Inputs]: Observable<Inputs[K]> };
-
-// Type guard to check if an observable is a ReactiveNode
-export function isReactiveNode(obs: Observable<unknown>): obs is ReactiveNode<Record<string, unknown>, unknown> {
-  return (obs as ReactiveNode<Record<string, unknown>, unknown>).isReactiveNode === true;
-}
