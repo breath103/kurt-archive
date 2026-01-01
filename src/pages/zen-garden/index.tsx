@@ -45,7 +45,7 @@ const ZenGardenV2Page: NextPage = () => {
       <canvas id="canvas" className="w-full h-full" />
       {editor && (
         <>
-          <PlainSizePanel editor={editor} />
+          {/* <PlainSizePanel editor={editor} /> */}
           <ObjectPanel editor={editor} />
           <AddPanel editor={editor} />
           <button
@@ -71,44 +71,6 @@ const ZenGardenV2Page: NextPage = () => {
 };
 
 export default ZenGardenV2Page;
-
-function PlainSizePanel({ editor }: { editor: ZenGardenEditor }) {
-  const updateSize = (axis: "x" | "y", value: number) => {
-    const current = editor.scene.plain.$size.value;
-    editor.scene.plain.$size.next(
-      new Vector2({
-        x: axis === "x" ? value : current.x,
-        y: axis === "y" ? value : current.y,
-      })
-    );
-  };
-
-  const size = editor.scene.plain.$size.value;
-
-  return (
-    <div className="fixed left-4 top-4 bg-white text-black p-4 rounded-lg space-y-2">
-      <h3 className="font-bold">Plain Size</h3>
-      <label className="block">
-        Width:
-        <input
-          type="number"
-          defaultValue={size.x}
-          onChange={(e) => updateSize("x", Number(e.target.value))}
-          className="ml-2 w-20 px-2 py-1 bg-white/20 rounded"
-        />
-      </label>
-      <label className="block">
-        Height:
-        <input
-          type="number"
-          defaultValue={size.y}
-          onChange={(e) => updateSize("y", Number(e.target.value))}
-          className="ml-2 w-20 px-2 py-1 bg-white/20 rounded"
-        />
-      </label>
-    </div>
-  );
-}
 
 function ObjectPanel({ editor }: { editor: ZenGardenEditor }) {
   const selected = useObservable(editor.$selectedObject);

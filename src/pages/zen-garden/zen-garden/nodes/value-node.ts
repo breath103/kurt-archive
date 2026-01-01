@@ -3,6 +3,7 @@ import type { z } from "zod";
 
 export class ValueNode<T> extends BehaviorSubject<T> {
   constructor(
+    readonly name: string,
     readonly schema: z.ZodType<T>,
     initial: T,
   ) {

@@ -26,7 +26,6 @@ export type ZenGardenPlainEncoded = {
 
 export class ZenGardenPlain implements Codable<ZenGardenPlainEncoded>, Disposable {
   readonly object: THREE.Mesh;
-  readonly $size: BehaviorSubject<Vector2>;
   readonly $textureName: BehaviorSubject<ZenGardenPlainEncoded["textureName"]>;
 
   private subscriptions = new Subscriptions();
@@ -41,14 +40,15 @@ export class ZenGardenPlain implements Codable<ZenGardenPlainEncoded>, Disposabl
   ) {
     const context: ReactiveNodeContext = { textureRenderer: renderer };
 
-    this.$size = new BehaviorSubject(new Vector2(encoded.size));
     this.$textureName = new BehaviorSubject(encoded.textureName);
 
-    const $tileSize = new ValueNode(z.int().min(1).max(10), 90);
+    const $sizeRaw = new ValueNode("plainSize", z.object({ x: z.int(), y: z.int() }), encoded.size);
+    const $size = new MapNode(context, { sizeRaw: $sizeRaw }, "plainSizeVector", ({ sizeRaw }) => new Vector2(sizeRaw));
+    const $tileSize = new ValueNode("tileSize", z.int().min(1).max(10), 1);
     
     // Calculate texture repeat
     const $textureRepeat = new MapNode(context, {
-      size: this.$size,
+      size: $size,
       tileSize: $tileSize,
     }, "textureRepeat", ({ size, tileSize }) => {
       return size.clone().divideScalar(tileSize);
@@ -86,7 +86,7 @@ export class ZenGardenPlain implements Codable<ZenGardenPlainEncoded>, Disposabl
     const displacementNode = new PlainDisplacementNode(context, {
       baseMap: baseDisplacementNode,
       textureRepeat: $textureRepeat,
-      plainSize: this.$size,
+      plainSize: $size,
       rakes: $rakesChanged,
     });
 
@@ -102,7 +102,7 @@ export class ZenGardenPlain implements Codable<ZenGardenPlainEncoded>, Disposabl
     });
 
     this.geometryNode = new StaticPlainGeometryNode(context, {
-      size: this.$size,
+      size: $size,
       segmentsPerUnit: of(64),
     });
 
@@ -130,7 +130,7 @@ export class ZenGardenPlain implements Codable<ZenGardenPlainEncoded>, Disposabl
 
   serialize(): ZenGardenPlainEncoded {
     return {
-      size: this.$size.value.serialize(),
+      size: $size.value.serialize(),
       textureName: this.$textureName.value,
     };
   }

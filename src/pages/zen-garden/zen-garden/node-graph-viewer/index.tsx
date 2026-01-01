@@ -27,6 +27,15 @@ function loadCachedPositions(): Map<string, Position> {
   }
 }
 
+function savePositions(graph: Map<string, NodeInfo>, positions: Map<string, Position>) {
+  const byName: Record<string, Position> = {};
+  graph.forEach((info, id) => {
+    const pos = positions.get(id);
+    if (pos) byName[info.name] = pos;
+  });
+  localStorage.setItem("node-graph-positions", JSON.stringify(byName));
+}
+
 export function NodeGraphViewer({ sinkNodes, renderer, onClose }: NodeGraphViewerProps) {
   const [graph, setGraph] = useState<Map<string, NodeInfo>>(new Map());
   const [positions, setPositions] = useState<Map<string, Position>>(new Map());
@@ -50,17 +59,6 @@ export function NodeGraphViewer({ sinkNodes, renderer, onClose }: NodeGraphViewe
 
     setPositions(merged);
   }, [sinkNodes]);
-
-  // Save positions to localStorage when they change
-  useEffect(() => {
-    if (graph.size === 0) return;
-    const byName: Record<string, Position> = {};
-    graph.forEach((info, id) => {
-      const pos = positions.get(id);
-      if (pos) byName[info.name] = pos;
-    });
-    localStorage.setItem("node-graph-positions", JSON.stringify(byName));
-  }, [graph, positions]);
 
   useLayoutEffect(() => {
     setLines(computeLines(graph, positions, nodeRefs.current));
@@ -90,7 +88,10 @@ export function NodeGraphViewer({ sinkNodes, renderer, onClose }: NodeGraphViewe
     });
   }, [dragging]);
 
-  const handleMouseUp = useCallback(() => setDragging(null), []);
+  const handleMouseUp = useCallback(() => {
+    if (dragging) savePositions(graph, positions);
+    setDragging(null);
+  }, [dragging, graph, positions]);
 
   const setNodeRef = useCallback((id: string, el: HTMLDivElement | null) => {
     if (el) {
