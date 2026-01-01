@@ -90,7 +90,7 @@ export function computeLines(
 
       lines.push({
         from: { x: fromPos.x + fromEl.offsetWidth, y: fromPos.y + 25 },
-        to: { x: toPos.x, y: toPos.y + 25 },
+        to: { x: toPos.x, y: toPos.y + 38 },
       });
     });
   });

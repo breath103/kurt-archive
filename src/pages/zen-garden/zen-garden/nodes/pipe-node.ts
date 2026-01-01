@@ -20,3 +20,17 @@ export class PipeNode<T, U> extends ReactiveNode<PipeNodeInputs<T>, U> {
 
   dispose(): void {}
 }
+
+
+export class RxNode<T> extends ReactiveNode<{ source: T }, T> {
+  constructor(context: ReactiveNodeContext, source: Observable<T>) {
+    super(context, { source });
+  }
+
+  protected process(_context: ReactiveNodeContext, inputs: { source: T }): T {
+    return inputs.source;
+  }
+
+  dispose(): void {}
+}
+

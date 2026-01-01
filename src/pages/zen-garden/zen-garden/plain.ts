@@ -14,7 +14,7 @@ import { PlainDisplacementNode } from "./nodes/plain-displacement-node";
 import { PlainNormalNode } from "./nodes/plain-normal-node";
 import { PlainMaterialNode } from "./nodes/plain-material-node";
 import { StaticPlainGeometryNode } from "./nodes/static-plain-geometry-node";
-import { PipeNode } from "./nodes/pipe-node";
+import { PipeNode, RxNode } from "./nodes/pipe-node";
 // TODO: Fix stitching for AdaptivePlaneGeometryNode then switch back
 // import { AdaptivePlaneGeometryNode } from "./nodes/adaptive-plane-geometry-node";
 
@@ -42,7 +42,8 @@ export class ZenGardenPlain implements Codable<ZenGardenPlainEncoded>, Disposabl
 
     this.$size = new BehaviorSubject(new Vector2(encoded.size));
     this.$textureName = new BehaviorSubject(encoded.textureName);
-    const $tileSize = new BehaviorSubject(3);
+    // const $tileSize = new BehaviorSubject(3);
+    const $tileSize = new RxNode(context, of(3));
 
     // Calculate texture repeat
     const $textureRepeat = combineLatest([this.$size, $tileSize]).pipe(
@@ -65,12 +66,35 @@ export class ZenGardenPlain implements Codable<ZenGardenPlainEncoded>, Disposabl
     // Node graph
     const textureSetNode = new TextureSetNode(context, { name: this.$textureName });
 
+    // const repeatedTextureSetNode = new PipeNode(context, {  })
+
     const mappedTextureNode = new MapTextureSetNode(context, {
       textureData: textureSetNode,
       repeat: $textureRepeat,
       wrapS: of(THREE.RepeatWrapping),
       wrapT: of(THREE.RepeatWrapping),
     });
+    
+    // export class MapTextureSetNode extends ReactiveNode<MapTextureSetNodeInputs, TextureSetData> {
+    //   constructor(
+    //     context: ReactiveNodeContext,
+    //     inputs: ReactiveNodeInputs<MapTextureSetNodeInputs>,
+    //   ) {
+    //     super(context, inputs);
+    //   }
+    
+    //   protected process(_context: ReactiveNodeContext, { textureData, repeat, wrapS, wrapT }: MapTextureSetNodeInputs): TextureSetData {
+    //     Object.values(textureData).forEach((texture) => {
+    //       if (repeat) texture.repeat.set(repeat.x, repeat.y);
+    //       if (wrapS !== undefined) texture.wrapS = wrapS;
+    //       if (wrapT !== undefined) texture.wrapT = wrapT;
+    //     });
+    //     return textureData;
+    //   }
+    
+    //   dispose(): void {}
+    // }
+    
 
     const baseDisplacementNode = new PipeNode(context, textureSetNode, t => t.displacement);
 

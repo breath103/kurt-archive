@@ -27,25 +27,26 @@ export function TexturePreview({ value, renderer }: Props) {
 
     const rt = value.renderTarget;
     if (rt) {
-      const width = rt.width;
-      const height = rt.height;
+      const { width, height } = rt;
       const pixels = new Uint8Array(width * height * 4);
       renderer.readRenderTargetPixels(rt as THREE.WebGLRenderTarget, 0, 0, width, height, pixels);
+
+      // Flip Y in-place
+      const rowSize = width * 4;
+      const temp = new Uint8Array(rowSize);
+      for (let y = 0; y < height / 2; y++) {
+        const topOffset = y * rowSize;
+        const bottomOffset = (height - 1 - y) * rowSize;
+        temp.set(pixels.subarray(topOffset, topOffset + rowSize));
+        pixels.copyWithin(topOffset, bottomOffset, bottomOffset + rowSize);
+        pixels.set(temp, bottomOffset);
+      }
 
       const canvas = document.createElement("canvas");
       canvas.width = width;
       canvas.height = height;
       canvas.getContext("2d")!.putImageData(new ImageData(new Uint8ClampedArray(pixels), width, height), 0, 0);
-
-      const flipped = document.createElement("canvas");
-      flipped.width = width;
-      flipped.height = height;
-      const fctx = flipped.getContext("2d")!;
-      fctx.translate(0, height);
-      fctx.scale(1, -1);
-      fctx.drawImage(canvas, 0, 0);
-
-      return flipped.toDataURL();
+      return canvas.toDataURL();
     }
 
     return null;
@@ -56,9 +57,8 @@ export function TexturePreview({ value, renderer }: Props) {
     div.innerHTML = "";
     const img = document.createElement("img");
     img.src = imageSrc;
-    img.style.width = "150px";
-    img.style.height = "150px";
-    img.style.objectFit = "contain";
+    img.style.width = "w-full";
+    img.style.height = "auto";
     div.appendChild(img);
   }, [div, imageSrc]);
 
@@ -66,7 +66,7 @@ export function TexturePreview({ value, renderer }: Props) {
     <>
       <div
         ref={setDiv}
-        className="w-[150px] h-[150px] border border-gray-600 bg-gray-800 cursor-pointer"
+        className="border border-gray-600 bg-gray-800 cursor-pointer"
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       />
