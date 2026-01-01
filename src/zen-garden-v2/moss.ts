@@ -33,6 +33,10 @@ export class ZenGardenMoss implements ZenGardenObject, Codable<ZenGardenMossEnco
     return this.object.testRaycast(raycaster);
   }
 
+  move(delta: Vector2): void {
+    this.object.position.add(delta.toVector3());
+  }
+
   dispose(): void {
     this.object.removeFromParent();
     this.object.dispose();

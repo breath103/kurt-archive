@@ -63,7 +63,7 @@ function AboutSection() {
           {", "}
           <a
             className="font-semibold text-highlight"
-            href="https://aws.amazon.com/ko/developer/community/heroes/kurt-lee/"
+            href="https://builder.aws.com/community/heroes/KurtLee"
           >
             AWS Serverless Hero
           </a>

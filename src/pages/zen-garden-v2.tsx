@@ -16,7 +16,10 @@ const ZenGardenV2Page: NextPage = () => {
     if (!canvas) return;
 
     const ed = new ZenGardenEditor(canvas, {
-      plain: { size: { x: 10, y: 5 } },
+      plain: { 
+        size: { x: 10, y: 5 },
+        textureName: "gravel",
+      },
       objects: [
         { id: "rock1", type: "rock", position: { x: -1, y: 0 } },
         { id: "rock2", type: "rock", position: { x: 1, y: 1 } },
@@ -53,14 +56,16 @@ export default ZenGardenV2Page;
 
 function PlainSizePanel({ editor }: { editor: ZenGardenEditor }) {
   const updateSize = (axis: "x" | "y", value: number) => {
-    const current = editor.scene.plain.size;
-    editor.scene.plain.size = new Vector2({
-      x: axis === "x" ? value : current.x,
-      y: axis === "y" ? value : current.y,
-    });
+    const current = editor.scene.plain.$size.value;
+    editor.scene.plain.$size.next(
+      new Vector2({
+        x: axis === "x" ? value : current.x,
+        y: axis === "y" ? value : current.y,
+      })
+    );
   };
 
-  const size = editor.scene.plain.size;
+  const size = editor.scene.plain.$size.value;
 
   return (
     <div className="fixed left-4 top-4 bg-white text-black p-4 rounded-lg space-y-2">

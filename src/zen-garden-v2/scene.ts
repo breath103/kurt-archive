@@ -1,4 +1,4 @@
-import { BehaviorSubject } from "rxjs";
+import { BehaviorSubject, map } from "rxjs";
 import * as THREE from "three";
 
 import type { Codable } from "./codable";
@@ -22,7 +22,7 @@ export class ZenGardenScene implements Codable<ZenGardenSceneEncoded> {
   readonly $objects = new BehaviorSubject<(ZenGardenRock | ZenGardenMoss | ZenGardenRakeStroke)[]>([]);
   private raycaster = new THREE.Raycaster();
 
-  constructor(encoded: ZenGardenSceneEncoded) {
+  constructor(encoded: ZenGardenSceneEncoded, renderer: THREE.WebGLRenderer) {
     // Z-up coordinate system
     THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
 
@@ -45,10 +45,12 @@ export class ZenGardenScene implements Codable<ZenGardenSceneEncoded> {
     this.sun = new Sun();
     this.scene.add(this.sun);
 
-    // Plain
-    this.plain = new ZenGardenPlain(encoded.plain);
+    // Plain - $rakes is derived from $objects
+    const $rakes = this.$objects.pipe(
+      map(objects => objects.filter((o): o is ZenGardenRakeStroke => o instanceof ZenGardenRakeStroke))
+    );
+    this.plain = new ZenGardenPlain(encoded.plain, $rakes, renderer);
     this.scene.add(this.plain.object);
-    this.plain.subscribeToRakeStrokes(this.$objects);
 
     // Objects
     for (const e of encoded.objects) {

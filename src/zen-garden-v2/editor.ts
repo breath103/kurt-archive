@@ -1,6 +1,7 @@
 import type { Subscription } from "rxjs";
 import { BehaviorSubject, type Observable, pairwise, startWith } from "rxjs";
 import * as THREE from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 import type { ZenGardenObject } from "./object";
 import type { ZenGardenSceneEncoded } from "./scene";
@@ -11,6 +12,7 @@ export type EditorMode = null | "addRock" | "addMoss";
 
 export class ZenGardenEditor {
   private renderer: THREE.WebGLRenderer;
+  private controls: OrbitControls;
   readonly scene: ZenGardenScene;
   private canvas: HTMLCanvasElement;
   private _$selectedObject = new BehaviorSubject<ZenGardenObject | null>(null);
@@ -29,7 +31,15 @@ export class ZenGardenEditor {
       return renderer;
     })();
 
-    this.scene = new ZenGardenScene(encoded);
+    this.scene = new ZenGardenScene(encoded, this.renderer);
+
+    this.controls = new OrbitControls(this.scene.threeCamera, canvas);
+    this.controls.enableDamping = true;
+    this.controls.mouseButtons = {
+      LEFT: null as unknown as THREE.MOUSE,  // Left click for object interaction
+      MIDDLE: THREE.MOUSE.DOLLY,
+      RIGHT: THREE.MOUSE.ROTATE,
+    };
 
     // Selection highlight logic
     this.subscriptions.push(
@@ -103,7 +113,7 @@ export class ZenGardenEditor {
 
     if (pos) {
       const delta = pos.clone().sub(this.dragging.lastPos);
-      this.dragging.object.object.position.add(delta.toVector3());
+      this.dragging.object.move(delta);
       this.dragging.lastPos = pos;
     }
   };
@@ -120,6 +130,7 @@ export class ZenGardenEditor {
   private animate = (): void => {
     if (this.disposed) return;
     requestAnimationFrame(this.animate);
+    this.controls.update();
     this.scene.update();
     this.renderer.render(this.scene.threeScene, this.scene.threeCamera);
   };
@@ -146,6 +157,7 @@ export class ZenGardenEditor {
   dispose(): void {
     this.disposed = true;
     this.subscriptions.forEach((s) => s.unsubscribe());
+    this.controls.dispose();
     this.canvas.removeEventListener("mousedown", this.handleMouseDown);
     this.canvas.removeEventListener("mousemove", this.handleMouseMove);
     this.canvas.removeEventListener("mouseup", this.handleMouseUp);

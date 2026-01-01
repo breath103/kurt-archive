@@ -3,7 +3,7 @@ import * as THREE from "three";
 
 import type { Codable } from "./codable";
 import type { ZenGardenObject } from "./object";
-import type { Vector2Encoded } from "./vector2";
+import type { Vector2, Vector2Encoded } from "./vector2";
 
 export type RakePath =
   | { type: "points"; points: Array<Vector2Encoded>; closed: boolean }
@@ -57,6 +57,11 @@ export class ZenGardenRakeStroke implements ZenGardenObject, Codable<ZenGardenRa
     return this.object.testRaycast(raycaster);
   }
 
+  move(delta: Vector2): void {
+    this.object.position.add(delta.toVector3());
+    this.$changed.next();
+  }
+
   dispose(): void {
     this.$changed.complete();
     this.object.removeFromParent();
@@ -87,6 +92,8 @@ class ZenGardenRakeStrokeObject extends THREE.Object3D {
       color: 0xc2b280,
       roughness: 0.9,
       side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0,
     });
 
     this.mesh = new THREE.Mesh(new THREE.BufferGeometry(), this.material);
@@ -215,9 +222,11 @@ class ZenGardenRakeStrokeObject extends THREE.Object3D {
 
   setHighlight(highlighted: boolean): void {
     if (highlighted) {
+      this.material.opacity = 1;
       this.material.emissive.setHex(0xffaa00);
       this.material.emissiveIntensity = 0.4;
     } else {
+      this.material.opacity = 0;
       this.material.emissive.setHex(0x000000);
       this.material.emissiveIntensity = 0;
     }

@@ -1,70 +1,117 @@
-import type { Observable, Subscription } from "rxjs";
-import { map, merge, switchMap } from "rxjs";
 import * as THREE from "three";
 
 import type { Codable } from "./codable";
-import type { ZenGardenObject } from "./object";
 import type { ZenGardenRakeStroke } from "./rake-stroke";
 import type { Vector2Encoded } from "./vector2";
 import { Vector2 } from "./vector2";
+import type { Observable } from "rxjs";
+import { BehaviorSubject, combineLatest, map, merge, of, shareReplay, startWith, switchMap } from "rxjs";
+import { Subscriptions } from "./utils/subscriptions";
+import type { ReactiveNodeContext } from "./utils/reactive-node";
+import { TextureSetNode } from "./nodes/texture-set-node";
+import { MapTextureSetNode } from "./nodes/map-texture-set-node";
+import { PlainDisplacementNode } from "./nodes/plain-displacement-node";
+import { PlainMaterialNode } from "./nodes/plain-material-node";
+import { StaticPlainGeometryNode } from "./nodes/static-plain-geometry-node";
+// TODO: Fix stitching for AdaptivePlaneGeometryNode then switch back
+// import { AdaptivePlaneGeometryNode } from "./nodes/adaptive-plane-geometry-node";
 
 export type ZenGardenPlainEncoded = {
   size: Vector2Encoded;
+  textureName: "gravel";
 };
 
-const PLAIN_Z = 0;
-
-export class ZenGardenPlain implements Codable<ZenGardenPlainEncoded> {
+export class ZenGardenPlain implements Codable<ZenGardenPlainEncoded>, Disposable {
   readonly object: THREE.Mesh;
-  private subscription: Subscription | null = null;
+  readonly $size: BehaviorSubject<Vector2>;
+  readonly $textureName: BehaviorSubject<ZenGardenPlainEncoded["textureName"]>;
 
-  constructor(encoded: ZenGardenPlainEncoded) {
-    const geometry = new THREE.PlaneGeometry(1, 1);
-    const material = new THREE.MeshStandardMaterial({
-      color: 0xd4c4a8,
-      roughness: 1,
+  private subscriptions = new Subscriptions();
+  private materialNode: PlainMaterialNode;
+  private geometryNode: StaticPlainGeometryNode;
+
+  constructor(
+    encoded: ZenGardenPlainEncoded,
+    $rakes: Observable<ZenGardenRakeStroke[]>,
+    renderer: THREE.WebGLRenderer,
+  ) {
+    const context: ReactiveNodeContext = { textureRenderer: renderer };
+
+    this.$size = new BehaviorSubject(new Vector2(encoded.size));
+    this.$textureName = new BehaviorSubject(encoded.textureName);
+    const $tileSize = new BehaviorSubject(3);
+
+    // Calculate texture repeat
+    const $textureRepeat = combineLatest([this.$size, $tileSize]).pipe(
+      map(([plainSize, tileSize]) => plainSize.clone().divideScalar(tileSize)),
+      shareReplay(1),
+    );
+
+    // Rakes that emits whenever any rake changes
+    const $rakesChanged = $rakes.pipe(
+      switchMap(rakes =>
+        rakes.length === 0
+          ? of(rakes)
+          : merge(...rakes.map(r => r.$changed)).pipe(
+            startWith(null),
+            map(() => rakes),
+          )
+      ),
+    );
+
+    // Node graph
+    const textureSetNode = new TextureSetNode(context, { name: this.$textureName });
+
+    const mappedTextureNode = new MapTextureSetNode(context, {
+      textureData: textureSetNode,
+      repeat: $textureRepeat,
+      wrapS: of(THREE.RepeatWrapping),
+      wrapT: of(THREE.RepeatWrapping),
     });
 
-    this.object = new THREE.Mesh(geometry, material);
-    this.object.position.z = PLAIN_Z;
+    const displacementNode = new PlainDisplacementNode(context, {
+      baseMap: textureSetNode.pipe(map(t => t.displacement), shareReplay(1)),
+      textureRepeat: $textureRepeat,
+      plainSize: this.$size,
+      rakes: $rakesChanged,
+    });
+
+    this.materialNode = new PlainMaterialNode(context, {
+      textureData: mappedTextureNode,
+      displacement: displacementNode,
+    });
+
+    this.geometryNode = new StaticPlainGeometryNode(context, {
+      size: this.$size,
+      segmentsPerUnit: of(64),
+    });
+
+    // Create mesh
+    this.object = new THREE.Mesh();
+    this.object.position.set(0, 0, 0);
     this.object.receiveShadow = true;
-    this.size = new Vector2(encoded.size);
+
+    // Geometry updates
+    this.subscriptions.add(this.geometryNode.subscribe(geo => {
+      this.object.geometry = geo;
+    }));
+
+    // Material updates
+    this.subscriptions.add(this.materialNode.subscribe(mat => {
+      this.object.material = mat;
+    }));
   }
 
-  subscribeToRakeStrokes($objects: Observable<ZenGardenObject[]>): void {
-    this.subscription?.unsubscribe();
-
-    this.subscription = $objects.pipe(
-      map(objects => objects.filter((o): o is ZenGardenRakeStroke => "$changed" in o)),
-      switchMap(strokes => {
-        if (strokes.length === 0) return [];
-        return merge(...strokes.map(s => s.$changed.pipe(map(() => strokes))));
-      }),
-    ).subscribe(strokes => {
-      this.updateTexture(strokes);
-    });
-  }
-
-  private updateTexture(rakeStrokes: ZenGardenRakeStroke[]): void {
-    // TODO: Actual texture rendering
-    console.log("updateTexture called with", rakeStrokes.length, "rake strokes");
-  }
-
-  dispose(): void {
-    this.subscription?.unsubscribe();
-  }
-
-  get size(): Vector2 {
-    return new Vector2({ x: this.object.scale.x, y: this.object.scale.y });
-  }
-
-  set size(value: Vector2) {
-    this.object.scale.set(value.x, value.y, 1);
+  [Symbol.dispose] = () => {
+    this.subscriptions[Symbol.dispose]();
+    this.materialNode.dispose();
+    this.geometryNode.dispose();
   }
 
   serialize(): ZenGardenPlainEncoded {
     return {
-      size: this.size.serialize(),
+      size: this.$size.value.serialize(),
+      textureName: this.$textureName.value,
     };
   }
 }
