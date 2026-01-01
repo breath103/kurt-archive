@@ -2,14 +2,16 @@ import type { NextPage } from "next";
 import { useEffect, useState } from "react";
 import type { Observable } from "rxjs";
 
-import { ZenGardenEditor } from "@/zen-garden-v2/editor";
-import { ZenGardenMoss } from "@/zen-garden-v2/moss";
-import { ZenGardenRakeStroke } from "@/zen-garden-v2/rake-stroke";
-import { ZenGardenRock } from "@/zen-garden-v2/rock";
-import { Vector2 } from "@/zen-garden-v2/vector2";
+import { ZenGardenEditor } from "./zen-garden/editor";
+import { ZenGardenMoss } from "./zen-garden/moss";
+import { NodeGraphViewer } from "./zen-garden/node-graph-viewer";
+import { ZenGardenRakeStroke } from "./zen-garden/rake-stroke";
+import { ZenGardenRock } from "./zen-garden/rock";
+import { Vector2 } from "./zen-garden/vector2";
 
 const ZenGardenV2Page: NextPage = () => {
   const [editor, setEditor] = useState<ZenGardenEditor | null>(null);
+  const [showNodeGraph, setShowNodeGraph] = useState(false);
 
   useEffect(() => {
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -46,6 +48,22 @@ const ZenGardenV2Page: NextPage = () => {
           <PlainSizePanel editor={editor} />
           <ObjectPanel editor={editor} />
           <AddPanel editor={editor} />
+          <button
+            onClick={() => setShowNodeGraph(true)}
+            className="fixed left-4 bottom-4 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+          >
+            Node Graph
+          </button>
+          {showNodeGraph && (
+            <NodeGraphViewer
+              sinkNodes={[
+                editor.scene.plain.materialNode,
+                editor.scene.plain.geometryNode,
+              ]}
+              renderer={editor.threeRenderer}
+              onClose={() => setShowNodeGraph(false)}
+            />
+          )}
         </>
       )}
     </>

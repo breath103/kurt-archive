@@ -1,12 +1,13 @@
 import * as THREE from "three";
 
-import type { ReactiveNodeContext, ReactiveNodeInputs } from "../utils/reactive-node";
-import { ReactiveNode } from "../utils/reactive-node";
+import type { ReactiveNodeContext, ReactiveNodeInputs } from "./node";
+import { ReactiveNode } from "./node";
 import type { TextureSetData } from "./texture-set-node";
 
 type PlainMaterialNodeInputs = {
   textureData: TextureSetData;
   displacement: THREE.Texture;
+  normal: THREE.Texture;
 };
 
 export class PlainMaterialNode extends ReactiveNode<PlainMaterialNodeInputs, THREE.MeshStandardMaterial> {
@@ -22,9 +23,9 @@ export class PlainMaterialNode extends ReactiveNode<PlainMaterialNodeInputs, THR
     super(context, inputs);
   }
 
-  protected process(_context: ReactiveNodeContext, { textureData, displacement }: PlainMaterialNodeInputs): THREE.MeshStandardMaterial {
+  protected process(_context: ReactiveNodeContext, { textureData, displacement, normal }: PlainMaterialNodeInputs): THREE.MeshStandardMaterial {
     this.material.map = textureData.color;
-    this.material.normalMap = textureData.normal;
+    this.material.normalMap = normal;
     this.material.aoMap = textureData.ao;
     this.material.roughnessMap = textureData.roughness;
     this.material.displacementMap = displacement;

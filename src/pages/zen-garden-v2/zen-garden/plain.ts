@@ -7,12 +7,14 @@ import { Vector2 } from "./vector2";
 import type { Observable } from "rxjs";
 import { BehaviorSubject, combineLatest, map, merge, of, shareReplay, startWith, switchMap } from "rxjs";
 import { Subscriptions } from "./utils/subscriptions";
-import type { ReactiveNodeContext } from "./utils/reactive-node";
+import type { ReactiveNodeContext } from "./nodes/node";
 import { TextureSetNode } from "./nodes/texture-set-node";
 import { MapTextureSetNode } from "./nodes/map-texture-set-node";
 import { PlainDisplacementNode } from "./nodes/plain-displacement-node";
+import { PlainNormalNode } from "./nodes/plain-normal-node";
 import { PlainMaterialNode } from "./nodes/plain-material-node";
 import { StaticPlainGeometryNode } from "./nodes/static-plain-geometry-node";
+import { PipeNode } from "./nodes/pipe-node";
 // TODO: Fix stitching for AdaptivePlaneGeometryNode then switch back
 // import { AdaptivePlaneGeometryNode } from "./nodes/adaptive-plane-geometry-node";
 
@@ -27,8 +29,9 @@ export class ZenGardenPlain implements Codable<ZenGardenPlainEncoded>, Disposabl
   readonly $textureName: BehaviorSubject<ZenGardenPlainEncoded["textureName"]>;
 
   private subscriptions = new Subscriptions();
-  private materialNode: PlainMaterialNode;
-  private geometryNode: StaticPlainGeometryNode;
+  // Exposed for debugging
+  readonly materialNode: PlainMaterialNode;
+  readonly geometryNode: StaticPlainGeometryNode;
 
   constructor(
     encoded: ZenGardenPlainEncoded,
@@ -69,16 +72,24 @@ export class ZenGardenPlain implements Codable<ZenGardenPlainEncoded>, Disposabl
       wrapT: of(THREE.RepeatWrapping),
     });
 
+    const baseDisplacementNode = new PipeNode(context, textureSetNode, t => t.displacement);
+
     const displacementNode = new PlainDisplacementNode(context, {
-      baseMap: textureSetNode.pipe(map(t => t.displacement), shareReplay(1)),
+      baseMap: baseDisplacementNode,
       textureRepeat: $textureRepeat,
       plainSize: this.$size,
       rakes: $rakesChanged,
     });
 
+    const normalNode = new PlainNormalNode(context, {
+      displacement: displacementNode,
+      strength: of(1.0),
+    });
+
     this.materialNode = new PlainMaterialNode(context, {
       textureData: mappedTextureNode,
       displacement: displacementNode,
+      normal: normalNode,
     });
 
     this.geometryNode = new StaticPlainGeometryNode(context, {

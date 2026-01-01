@@ -143,6 +143,10 @@ export class ZenGardenEditor {
     return this._$mode;
   }
 
+  get threeRenderer(): THREE.WebGLRenderer {
+    return this.renderer;
+  }
+
   setMode(mode: EditorMode): void {
     this._$mode.next(mode);
   }

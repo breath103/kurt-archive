@@ -1,42 +1,6 @@
 import { combineLatest, from, isObservable, Observable, of, shareReplay, switchMap } from "rxjs";
 import { type WebGLRenderer } from "three";
 
-/**
- * Base class for reactive processing nodes.
- * Extends Observable so it integrates directly with RxJS.
- *
- * Example:
- * ```ts
- * type Inputs = { base: Texture; size: Vector2 };
- *
- * class DisplacementMap extends ReactiveNode<Inputs, Texture> {
- *   private renderTarget: WebGLRenderTarget;
- *
- *   constructor(
- *     private renderer: WebGLRenderer,
- *     inputs: { base: Observable<Texture>; size: Observable<Vector2> },
- *   ) {
- *     super(inputs);
- *     this.renderTarget = new WebGLRenderTarget(...);
- *   }
- *
- *   protected process({ base, size }: Inputs) {
- *     // render to target
- *     return this.renderTarget.texture;
- *   }
- *
- *   dispose() {
- *     this.renderTarget.dispose();
- *   }
- * }
- *
- * // Usage - it's just an Observable
- * const displacement = new DisplacementMap(renderer, { base: $base, size: $size });
- * displacement.subscribe(texture => material.displacementMap = texture);
- * ```
- */
-
-
 // Global values that will not change. if anything that can and will change, do not use this
 export interface ReactiveNodeContext {
   textureRenderer: WebGLRenderer // renderer we use for sub rendering passes 
@@ -49,9 +13,20 @@ export abstract class ReactiveNode<Inputs extends Record<string, unknown>, Outpu
   public debugLogInputChanges = true;
   private prevValues: Inputs | null = null;
 
+  // Debug: store inputs for graph traversal
+  readonly debugInputs: Map<string, Observable<unknown>>;
+  // Debug: marker to identify ReactiveNode instances
+  readonly isReactiveNode = true as const;
+
   constructor(context: ReactiveNodeContext, inputs: ReactiveNodeInputs<Inputs>) {
     const keys = Object.keys(inputs) as (keyof Inputs)[];
     const observables = keys.map(k => inputs[k]);
+
+    // Store inputs for debug traversal
+    const inputMap = new Map<string, Observable<unknown>>();
+    for (const key of keys) {
+      inputMap.set(String(key), inputs[key] as Observable<unknown>);
+    }
 
     const source$ = combineLatest(observables).pipe(
       switchMap((values) => {
@@ -83,6 +58,7 @@ export abstract class ReactiveNode<Inputs extends Record<string, unknown>, Outpu
     );
 
     super((subscriber) => source$.subscribe(subscriber));
+    this.debugInputs = inputMap;
   }
 
   protected abstract process(context: ReactiveNodeContext, inputs: Inputs): Output | Promise<Output> | Observable<Output>;
@@ -95,3 +71,8 @@ export abstract class ReactiveNode<Inputs extends Record<string, unknown>, Outpu
 }
 
 export type ReactiveNodeInputs<Inputs extends Record<string, unknown>> = { [K in keyof Inputs]: Observable<Inputs[K]> };
+
+// Type guard to check if an observable is a ReactiveNode
+export function isReactiveNode(obs: Observable<unknown>): obs is ReactiveNode<Record<string, unknown>, unknown> {
+  return (obs as ReactiveNode<Record<string, unknown>, unknown>).isReactiveNode === true;
+}

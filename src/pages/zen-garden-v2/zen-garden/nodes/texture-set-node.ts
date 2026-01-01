@@ -1,20 +1,22 @@
 import * as THREE from "three";
 
-import type { ReactiveNodeContext } from "../utils/reactive-node";
-import { ReactiveNode } from "../utils/reactive-node";
+import type { ReactiveNodeContext } from "./node";
+import { ReactiveNode } from "./node";
 
-export interface TextureSetData {
-  ao: THREE.Texture;
-  color: THREE.Texture;
-  displacement: THREE.Texture;
-  normal: THREE.Texture;
-  roughness: THREE.Texture;
+export class TextureSetData {
+  constructor(
+    readonly ao: THREE.Texture,
+    readonly color: THREE.Texture,
+    readonly displacement: THREE.Texture,
+    readonly normal: THREE.Texture,
+    readonly roughness: THREE.Texture,
+  ) {}
 }
 
 type TextureSetNodeInputs = { name: string };
 
 export class TextureSetNode extends ReactiveNode<TextureSetNodeInputs, TextureSetData> {
-  protected async process(context: ReactiveNodeContext, { name }: TextureSetNodeInputs): Promise<TextureSetData> {
+  protected async process(_context: ReactiveNodeContext, { name }: TextureSetNodeInputs): Promise<TextureSetData> {
     const loader = new THREE.TextureLoader();
     const basePath = `/textures/${name}`;
 
@@ -30,7 +32,7 @@ export class TextureSetNode extends ReactiveNode<TextureSetNodeInputs, TextureSe
       load("roughness"),
     ]);
 
-    return { ao, color, displacement, normal, roughness };
+    return new TextureSetData(ao, color, displacement, normal, roughness);
   }
 
   dispose(): void {}

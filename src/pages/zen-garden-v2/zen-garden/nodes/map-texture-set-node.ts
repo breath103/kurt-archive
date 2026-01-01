@@ -1,7 +1,7 @@
 import type * as THREE from "three";
 
-import type { ReactiveNodeContext, ReactiveNodeInputs } from "../utils/reactive-node";
-import { ReactiveNode } from "../utils/reactive-node";
+import type { ReactiveNodeContext, ReactiveNodeInputs } from "./node";
+import { ReactiveNode } from "./node";
 import type { Vector2 } from "../vector2";
 import type { TextureSetData } from "./texture-set-node";
 
