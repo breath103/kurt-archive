@@ -9,7 +9,7 @@ type Props = {
 
 export function TexturePreview({ value, renderer }: Props) {
   const [div, setDiv] = useState<HTMLDivElement | null>(null);
-  const [hovered, setHovered] = useState(false);
+  const [showFull, setShowFull] = useState(false);
 
   const imageSrc = useMemo(() => {
     const img = value.image;
@@ -67,11 +67,10 @@ export function TexturePreview({ value, renderer }: Props) {
       <div
         ref={setDiv}
         className="border border-gray-600 bg-gray-800 cursor-pointer"
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
+        onClick={() => setShowFull (true)}
       />
-      {hovered && imageSrc && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 pointer-events-none">
+      {showFull && imageSrc && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50" onClick={() => setShowFull (false)}>
           <img src={imageSrc} className="max-w-[90vw] max-h-[90vh] object-contain" />
         </div>,
         document.body

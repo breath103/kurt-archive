@@ -23,3 +23,23 @@ body {
   color: rgb(var(--foreground-rgb));
   background-color: rgb(var(--background-rgb));
 }
+
+
+.rjsf-field {
+  > fieldset {
+    @apply space-y-1
+  }
+
+  .control-label {
+    @apply text-white mx-1;
+  }
+
+  .form-control {
+    width: 3em;
+    border-radius: 0.25rem;
+  }
+}
+
+.form-group.rjsf-field.rjsf-field-integer {
+  @apply flex flex-row items-center;
+}

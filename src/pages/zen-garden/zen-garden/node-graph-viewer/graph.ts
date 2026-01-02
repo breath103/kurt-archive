@@ -5,7 +5,6 @@ import { ValueNode } from "../nodes/value-node";
 
 export type NodeInfo = {
   id: string;
-  name: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   output: Observable<any>;
   inputs: Map<string, NodeInfo | null>; // null means plain Observable input
@@ -23,7 +22,6 @@ export function buildGraph(
 
     const info: NodeInfo = {
       id: `node-${idCounter++}`,
-      name: "ValueNode",
       output: node,
       inputs: new Map(),
       depth: 0,
@@ -37,7 +35,6 @@ export function buildGraph(
 
     const info: NodeInfo = {
       id: `node-${idCounter++}`,
-      name: node.constructor.name,
       output: node,
       inputs: new Map(),
       depth: 0,

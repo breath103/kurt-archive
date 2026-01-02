@@ -27,13 +27,12 @@ function loadCachedPositions(): Map<string, Position> {
   }
 }
 
-function savePositions(graph: Map<string, NodeInfo>, positions: Map<string, Position>) {
-  const byName: Record<string, Position> = {};
-  graph.forEach((info, id) => {
-    const pos = positions.get(id);
-    if (pos) byName[info.name] = pos;
+function savePositions(positions: Map<string, Position>) {
+  const obj: Record<string, Position> = {};
+  positions.forEach((pos, id) => {
+    obj[id] = pos;
   });
-  localStorage.setItem("node-graph-positions", JSON.stringify(byName));
+  localStorage.setItem("node-graph-positions", JSON.stringify(obj));
 }
 
 export function NodeGraphViewer({ sinkNodes, renderer, onClose }: NodeGraphViewerProps) {
@@ -52,9 +51,8 @@ export function NodeGraphViewer({ sinkNodes, renderer, onClose }: NodeGraphViewe
 
     // Use cached positions, fall back to generated for new nodes
     const merged = new Map<string, Position>();
-    g.forEach((info, id) => {
-      const cachedPos = cached.get(info.name);
-      merged.set(id, cachedPos ?? generated.get(id)!);
+    g.forEach((_, id) => {
+      merged.set(id, cached.get(id) ?? generated.get(id)!);
     });
 
     setPositions(merged);
@@ -89,9 +87,14 @@ export function NodeGraphViewer({ sinkNodes, renderer, onClose }: NodeGraphViewe
   }, [dragging]);
 
   const handleMouseUp = useCallback(() => {
-    if (dragging) savePositions(graph, positions);
+    if (dragging) {
+      setPositions(current => {
+        savePositions(current);
+        return current;
+      });
+    }
     setDragging(null);
-  }, [dragging, graph, positions]);
+  }, [dragging]);
 
   const setNodeRef = useCallback((id: string, el: HTMLDivElement | null) => {
     if (el) {
@@ -156,7 +159,7 @@ export function NodeGraphViewer({ sinkNodes, renderer, onClose }: NodeGraphViewe
                 ref={el => setNodeRef(info.id, el)}
                 className="absolute cursor-move"
                 style={{ left: pos.x, top: pos.y }}
-                onMouseDown={e => handleMouseDown(e, info.id)}
+                onMouseDown={e => { e.preventDefault(); handleMouseDown(e, info.id); }}
               >
                 <NodeCard info={info} renderer={renderer} />
               </div>
