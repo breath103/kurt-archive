@@ -1,7 +1,7 @@
 import type { Observable } from "rxjs";
 
-import type { ReactiveNodeContext, ReactiveNodeInputs } from "./node";
-import { ReactiveNode } from "./node";
+import type { ReactiveNodeContext, ReactiveNodeInputs } from "./Node";
+import { ReactiveNode } from "./Node";
 
 type PipeNodeInputs<T> = { source: T };
 

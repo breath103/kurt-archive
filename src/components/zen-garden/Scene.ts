@@ -1,18 +1,18 @@
 import { BehaviorSubject, map } from "rxjs";
 import * as THREE from "three";
 
-import type { Codable } from "./codable";
-import type { ZenGardenMossEncoded } from "./moss";
-import { ZenGardenMoss } from "./moss";
-import type { ZenGardenObject } from "./object";
-import type { ZenGardenPlainEncoded } from "./plain";
-import { ZenGardenPlain } from "./plain";
-import type { ZenGardenRakeStrokeEncoded } from "./rake-stroke";
-import { ZenGardenRakeStroke } from "./rake-stroke";
-import type { ZenGardenRockEncoded } from "./rock";
-import { ZenGardenRock } from "./rock";
-import { Sun } from "./sun";
-import { Vector2 } from "./vector2";
+import type { Codable } from "./utils/Codable";
+import type { ZenGardenMossEncoded } from "./Moss";
+import { ZenGardenMoss } from "./Moss";
+import type { ZenGardenObject } from "./Object";
+import type { ZenGardenPlainEncoded } from "./Plain";
+import { ZenGardenPlain } from "./Plain";
+import type { ZenGardenRakeStrokeEncoded } from "./RakeStroke";
+import { ZenGardenRakeStroke } from "./RakeStroke";
+import type { ZenGardenRockEncoded } from "./Rock";
+import { ZenGardenRock } from "./Rock";
+import { Sun } from "./Sun";
+import { Vector2 } from "./Vector2";
 
 export class ZenGardenScene implements Codable<ZenGardenSceneEncoded> {
   private scene: THREE.Scene;

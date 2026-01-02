@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type * as THREE from "three";
 
-import type { ReactiveNode } from "../nodes/node";
-import type { NodeInfo } from "./graph";
-import { buildGraph } from "./graph";
-import type { Position } from "./layout";
-import { computeLayout, computeLines } from "./layout";
-import { NodeCard } from "./node-card";
+import type { ReactiveNode } from "../nodes/Node";
+import type { NodeInfo } from "./Graph";
+import { buildGraph } from "./Graph";
+import type { Position } from "./Layout";
+import { computeLayout, computeLines } from "./Layout";
+import { NodeCard } from "./NodeCard";
 
 export type NodeGraphViewerProps = {
   sinkNodes: ReactiveNode<Record<string, unknown>, unknown>[];

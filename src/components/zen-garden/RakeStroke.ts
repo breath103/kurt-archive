@@ -1,9 +1,9 @@
 import { Subject } from "rxjs";
 import * as THREE from "three";
 
-import type { Codable } from "./codable";
-import type { ZenGardenObject } from "./object";
-import type { Vector2, Vector2Encoded } from "./vector2";
+import type { Codable } from "./utils/Codable";
+import type { ZenGardenObject } from "./Object";
+import type { Vector2, Vector2Encoded } from "./Vector2";
 
 export type RakePath =
   | { type: "points"; points: Array<Vector2Encoded>; closed: boolean }

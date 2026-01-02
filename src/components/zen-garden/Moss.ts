@@ -1,25 +1,28 @@
 import * as THREE from "three";
 
-import type { Codable } from "./codable";
-import type { ZenGardenObject } from "./object";
-import type { Vector2Encoded } from "./vector2";
-import { Vector2 } from "./vector2";
+import type { Codable } from "./utils/Codable";
+import type { ZenGardenObject } from "./Object";
+import type { Vector2Encoded } from "./Vector2";
+import { Vector2 } from "./Vector2";
 
-export type ZenGardenRockEncoded = {
+export type ZenGardenMossEncoded = {
   id: string;
-  type: "rock";
+  type: "moss";
   position: Vector2Encoded;
+  polygonPath: Array<Vector2Encoded>;
 };
 
-const ROCK_Z = 0.15;
+const MOSS_Z = 0.01;
 
-export class ZenGardenRock implements ZenGardenObject, Codable<ZenGardenRockEncoded> {
+export class ZenGardenMoss implements ZenGardenObject, Codable<ZenGardenMossEncoded> {
   readonly id: string;
-  readonly object: ZenGardenRockObject;
+  readonly object: ZenGardenMossObject;
+  private points: Array<Vector2Encoded>;
 
-  constructor(encoded: ZenGardenRockEncoded) {
+  constructor(encoded: ZenGardenMossEncoded) {
     this.id = encoded.id;
-    this.object = new ZenGardenRockObject(encoded.position);
+    this.points = [...encoded.polygonPath];
+    this.object = new ZenGardenMossObject(encoded.position, this.points);
   }
 
   setHighlight(highlighted: boolean): void {
@@ -39,33 +42,43 @@ export class ZenGardenRock implements ZenGardenObject, Codable<ZenGardenRockEnco
     this.object.dispose();
   }
 
-  serialize(): ZenGardenRockEncoded {
+  serialize(): ZenGardenMossEncoded {
     return {
       id: this.id,
-      type: "rock",
+      type: "moss",
       position: { x: this.object.position.x, y: this.object.position.y },
+      polygonPath: this.points,
     };
   }
 }
 
-class ZenGardenRockObject extends THREE.Object3D {
+class ZenGardenMossObject extends THREE.Object3D {
   private mesh: THREE.Mesh;
   private material: THREE.MeshStandardMaterial;
 
-  constructor(position: Vector2Encoded) {
+  constructor(position: Vector2Encoded, points: Array<Vector2Encoded>) {
     super();
 
-    const geometry = new THREE.SphereGeometry(0.3, 8, 6);
-    geometry.scale(1, 1, 0.6);
+    const shape = new THREE.Shape();
+    if (points.length > 0) {
+      shape.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i++) {
+        shape.lineTo(points[i].x, points[i].y);
+      }
+      shape.closePath();
+    }
+
+    const geometry = new THREE.ShapeGeometry(shape);
     this.material = new THREE.MeshStandardMaterial({
-      color: 0x666666,
-      roughness: 0.9,
+      color: 0x4a7c23,
+      roughness: 0.8,
+      side: THREE.DoubleSide,
     });
+
     this.mesh = new THREE.Mesh(geometry, this.material);
-    this.mesh.castShadow = true;
     this.add(this.mesh);
 
-    this.position.copy(new Vector2(position).toVector3(ROCK_Z));
+    this.position.copy(new Vector2(position).toVector3(MOSS_Z));
   }
 
   setHighlight(highlighted: boolean): void {

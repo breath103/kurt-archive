@@ -3,10 +3,10 @@ import { BehaviorSubject, type Observable, pairwise, startWith } from "rxjs";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
-import type { ZenGardenObject } from "./object";
-import type { ZenGardenSceneEncoded } from "./scene";
-import { ZenGardenScene } from "./scene";
-import type { Vector2 } from "./vector2";
+import type { ZenGardenObject } from "./Object";
+import type { ZenGardenSceneEncoded } from "./Scene";
+import { ZenGardenScene } from "./Scene";
+import type { Vector2 } from "./Vector2";
 
 export type EditorMode = null | "addRock" | "addMoss";
 

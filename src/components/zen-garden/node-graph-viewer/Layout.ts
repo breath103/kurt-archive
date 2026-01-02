@@ -1,4 +1,4 @@
-import type { NodeInfo } from "./graph";
+import type { NodeInfo } from "./Graph";
 
 export type Position = { x: number; y: number };
 

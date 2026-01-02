@@ -1,8 +1,8 @@
 import * as THREE from "three";
 
-import type { ReactiveNodeContext, ReactiveNodeInputs } from "./node";
-import { ReactiveNode } from "./node";
-import type { TextureSetData } from "./texture-set-node";
+import type { ReactiveNodeContext, ReactiveNodeInputs } from "./Node";
+import { ReactiveNode } from "./Node";
+import type { TextureSetData } from "./TextureSetNode";
 
 type PlainMaterialNodeInputs = {
   textureData: TextureSetData;

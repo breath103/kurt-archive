@@ -2,11 +2,11 @@ import type { NextPage } from "next";
 import { useEffect, useState } from "react";
 import type { Observable } from "rxjs";
 
-import { ZenGardenEditor } from "@/components/zen-garden/editor";
-import { ZenGardenMoss } from "@/components/zen-garden/moss";
+import { ZenGardenEditor } from "@/components/zen-garden/Editor";
+import { ZenGardenMoss } from "@/components/zen-garden/Moss";
 import { NodeGraphViewer } from "@/components/zen-garden/node-graph-viewer";
-import { ZenGardenRakeStroke } from "@/components/zen-garden/rake-stroke";
-import { ZenGardenRock } from "@/components/zen-garden/rock";
+import { ZenGardenRakeStroke } from "@/components/zen-garden/RakeStroke";
+import { ZenGardenRock } from "@/components/zen-garden/Rock";
 
 const ZenGardenV2Page: NextPage = () => {
   const [editor, setEditor] = useState<ZenGardenEditor | null>(null);

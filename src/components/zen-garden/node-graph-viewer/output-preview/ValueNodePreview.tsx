@@ -4,7 +4,7 @@ import validator from "@rjsf/validator-ajv8";
 import { useEffect, useMemo,useState } from "react";
 import { toJSONSchema } from "zod";
 
-import type { ValueNode } from "../../nodes/value-node";
+import type { ValueNode } from "../../nodes/ValueNode";
 
 type Props = {
   node: ValueNode<unknown>;

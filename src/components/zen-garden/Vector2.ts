@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-import type { Codable } from "./codable";
+import type { Codable } from "./utils/Codable";
 
 export type Vector2Encoded = { x: number; y: number };
 

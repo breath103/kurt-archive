@@ -1,7 +1,7 @@
 import type * as THREE from "three";
 
-import type { TextureSetData } from "../../nodes/texture-set-node";
-import { TexturePreview } from "./texture-preview";
+import type { TextureSetData } from "../../nodes/TextureSetNode";
+import { TexturePreview } from "./TexturePreview";
 
 type Props = {
   value: TextureSetData;

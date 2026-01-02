@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
-import type { ReactiveNodeContext } from "./node";
-import { ReactiveNode } from "./node";
+import type { ReactiveNodeContext } from "./Node";
+import { ReactiveNode } from "./Node";
 
 export class TextureSetData implements Iterable<THREE.Texture> {
   constructor(

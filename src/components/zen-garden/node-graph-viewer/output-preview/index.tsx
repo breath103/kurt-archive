@@ -1,14 +1,14 @@
 import type { Observable } from "rxjs";
 import * as THREE from "three";
 
-import { TextureSetData } from "../../nodes/texture-set-node";
-import { ValueNode } from "../../nodes/value-node";
-import { DefaultPreview } from "./default-preview";
-import { GeometryPreview } from "./geometry-preview";
-import { MaterialPreview } from "./material-preview";
-import { TexturePreview } from "./texture-preview";
-import { TextureSetPreview } from "./texture-set-preview";
-import { ValueNodePreview } from "./value-node-preview";
+import { TextureSetData } from "../../nodes/TextureSetNode";
+import { ValueNode } from "../../nodes/ValueNode";
+import { DefaultPreview } from "./DefaultPreview";
+import { GeometryPreview } from "./GeometryPreview";
+import { MaterialPreview } from "./MaterialPreview";
+import { TexturePreview } from "./TexturePreview";
+import { TextureSetPreview } from "./TextureSetPreview";
+import { ValueNodePreview } from "./ValueNodePreview";
 
 export type OutputPreviewProps = {
   value: unknown;

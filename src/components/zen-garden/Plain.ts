@@ -3,21 +3,21 @@ import { BehaviorSubject, map, merge, of, startWith, switchMap } from "rxjs";
 import * as THREE from "three";
 import z from "zod";
 
-import type { Codable } from "./codable";
-import type { ReactiveNodeContext } from "./nodes/node";
-import { MapNode, PipeNode } from "./nodes/pipe-node";
-import { PlainDisplacementNode } from "./nodes/plain-displacement-node";
-import { PlainMaterialNode } from "./nodes/plain-material-node";
-import { PlainNormalNode } from "./nodes/plain-normal-node";
-import { StaticPlainGeometryNode } from "./nodes/static-plain-geometry-node";
-import { TextureSetNode } from "./nodes/texture-set-node";
-import { ValueNode } from "./nodes/value-node";
-import type { ZenGardenRakeStroke } from "./rake-stroke";
-import { Subscriptions } from "./utils/subscriptions";
-import type { Vector2Encoded } from "./vector2";
-import { Vector2 } from "./vector2";
+import type { Codable } from "./utils/Codable";
+import type { ReactiveNodeContext } from "./nodes/Node";
+import { MapNode, PipeNode } from "./nodes/PipeNode";
+import { PlainDisplacementNode } from "./nodes/PlainDisplacementNode";
+import { PlainMaterialNode } from "./nodes/PlainMaterialNode";
+import { PlainNormalNode } from "./nodes/PlainNormalNode";
+import { StaticPlainGeometryNode } from "./nodes/StaticPlainGeometryNode";
+import { TextureSetNode } from "./nodes/TextureSetNode";
+import { ValueNode } from "./nodes/ValueNode";
+import type { ZenGardenRakeStroke } from "./RakeStroke";
+import { Subscriptions } from "./utils/Subscriptions";
+import type { Vector2Encoded } from "./Vector2";
+import { Vector2 } from "./Vector2";
 // TODO: Fix stitching for AdaptivePlaneGeometryNode then switch back
-// import { AdaptivePlaneGeometryNode } from "./nodes/adaptive-plane-geometry-node";
+// import { AdaptivePlaneGeometryNode } from "./nodes/AdaptivePlaneGeometryNode";
 
 export type ZenGardenPlainEncoded = {
   size: Vector2Encoded;

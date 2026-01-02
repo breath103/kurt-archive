@@ -1,6 +1,6 @@
 import type * as THREE from "three";
 
-import type { Vector2 } from "./vector2";
+import type { Vector2 } from "./Vector2";
 
 export interface ZenGardenObject {
   id: string;

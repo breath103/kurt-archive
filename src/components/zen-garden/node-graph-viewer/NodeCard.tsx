@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import type { Observable } from "rxjs";
 import type * as THREE from "three";
 
-import { MapNode } from "../nodes/pipe-node";
-import { ValueNode } from "../nodes/value-node";
-import type { NodeInfo } from "./graph";
+import { MapNode } from "../nodes/PipeNode";
+import { ValueNode } from "../nodes/ValueNode";
+import type { NodeInfo } from "./Graph";
 import { OutputPreview } from "./output-preview";
 
 export type NodeCardProps = {

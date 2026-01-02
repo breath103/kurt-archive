@@ -1,7 +1,7 @@
 import type { Observable } from "rxjs";
 
-import { ReactiveNode } from "../nodes/node";
-import { ValueNode } from "../nodes/value-node";
+import { ReactiveNode } from "../nodes/Node";
+import { ValueNode } from "../nodes/ValueNode";
 
 export type NodeInfo = {
   id: string;

@@ -1,9 +1,9 @@
 import * as THREE from "three";
 
-import type { ZenGardenRakeStroke } from "../rake-stroke";
-import type { Vector2 } from "../vector2";
-import type { ReactiveNodeContext, ReactiveNodeInputs } from "./node";
-import { ReactiveNode } from "./node";
+import type { ZenGardenRakeStroke } from "../RakeStroke";
+import type { Vector2 } from "../Vector2";
+import type { ReactiveNodeContext, ReactiveNodeInputs } from "./Node";
+import { ReactiveNode } from "./Node";
 
 type PlainDisplacementNodeInputs = {
   baseMap: THREE.Texture;
@@ -109,7 +109,7 @@ export class PlainDisplacementNode extends ReactiveNode<PlainDisplacementNodeInp
 
         // Sine wave for ridges and grooves
         float wave = sin(perpDist * tineFrequency * PI * 2.0);
-        rakeEffect += influence * wave * 1.0;
+        rakeEffect += influence * wave * 0.25;
       }
 
       gl_FragColor = vec4(vec3(baseHeight + rakeEffect), 1.0);
