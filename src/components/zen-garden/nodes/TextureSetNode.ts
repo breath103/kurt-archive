@@ -1,0 +1,43 @@
+import * as THREE from "three";
+
+import type { ReactiveNodeContext } from "./Node";
+import { ReactiveNode } from "./Node";
+
+export class TextureSetData implements Iterable<THREE.Texture> {
+  constructor(
+    readonly ao: THREE.Texture,
+    readonly color: THREE.Texture,
+    readonly displacement: THREE.Texture,
+    readonly normal: THREE.Texture,
+    readonly roughness: THREE.Texture,
+  ) {}
+
+  [Symbol.iterator](): ArrayIterator<THREE.Texture> {
+    return [this.ao, this.color, this.displacement, this.normal, this.roughness][Symbol.iterator]();
+  }
+}
+
+type TextureSetNodeInputs = { name: string };
+
+export class TextureSetNode extends ReactiveNode<TextureSetNodeInputs, TextureSetData> {
+  protected async process(_context: ReactiveNodeContext, { name }: TextureSetNodeInputs): Promise<TextureSetData> {
+    const loader = new THREE.TextureLoader();
+    const basePath = `/textures/${name}`;
+
+    const load = (texName: string) => new Promise<THREE.Texture>((resolve, reject) => {
+      loader.load(`${basePath}/${texName}.jpg`, resolve, undefined, reject);
+    });
+
+    const [ao, color, displacement, normal, roughness] = await Promise.all([
+      load("ao"),
+      load("color"),
+      load("displacement"),
+      load("normal"),
+      load("roughness"),
+    ]);
+
+    return new TextureSetData(ao, color, displacement, normal, roughness);
+  }
+
+  dispose(): void {}
+}

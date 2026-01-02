@@ -1,9 +1,9 @@
-import '../styles/globals.css';
+import "../styles/globals.css";
 
-import type { AppProps } from 'next/app';
-import { Inter } from 'next/font/google';
+import type { AppProps } from "next/app";
+import { Inter } from "next/font/google";
 
-const font = Inter({ subsets: ['latin'] });
+const font = Inter({ subsets: ["latin"] });
 
 function App({ Component, pageProps }: AppProps) {
   return (
