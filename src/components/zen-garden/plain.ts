@@ -27,11 +27,13 @@ export type ZenGardenPlainEncoded = {
 export class ZenGardenPlain implements Codable<ZenGardenPlainEncoded>, Disposable {
   readonly object: THREE.Mesh;
   readonly $textureName: BehaviorSubject<ZenGardenPlainEncoded["textureName"]>;
-
+  
   private subscriptions = new Subscriptions();
   // Exposed for debugging
   readonly materialNode: PlainMaterialNode;
   readonly geometryNode: StaticPlainGeometryNode;
+
+  readonly $size: ValueNode<{ x: number, y: number }>;
 
   constructor(
     encoded: ZenGardenPlainEncoded,
@@ -45,7 +47,9 @@ export class ZenGardenPlain implements Codable<ZenGardenPlainEncoded>, Disposabl
     const $sizeRaw = new ValueNode("plainSize", z.object({ x: z.int(), y: z.int() }), encoded.size);
     const $size = new MapNode(context, { sizeRaw: $sizeRaw }, "plainSizeVector", ({ sizeRaw }) => new Vector2(sizeRaw));
     const $tileSize = new ValueNode("tileSize", z.int().min(1).max(10), 1);
-    
+
+    this.$size = $sizeRaw;
+
     // Calculate texture repeat
     const $textureRepeat = new MapNode(context, {
       size: $size,
@@ -130,7 +134,7 @@ export class ZenGardenPlain implements Codable<ZenGardenPlainEncoded>, Disposabl
 
   serialize(): ZenGardenPlainEncoded {
     return {
-      size: $size.value.serialize(),
+      size: this.$size.value,
       textureName: this.$textureName.value,
     };
   }

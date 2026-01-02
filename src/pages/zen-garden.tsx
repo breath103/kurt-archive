@@ -1,286 +1,182 @@
 import type { NextPage } from "next";
 import { useEffect, useState } from "react";
+import type { Observable } from "rxjs";
 
-import type {
-  EditorMode,
-  GroundTextureName,
-  RockWaveSettings,
-  ZenGardenObject,
-  ZenGardenRock,
-} from "@/zen-garden";
-import { DEFAULT_ROCK_WAVE_SETTINGS, ZenGardenEditor } from "@/zen-garden";
+import { ZenGardenEditor } from "@/components/zen-garden/editor";
+import { ZenGardenMoss } from "@/components/zen-garden/moss";
+import { NodeGraphViewer } from "@/components/zen-garden/node-graph-viewer";
+import { ZenGardenRakeStroke } from "@/components/zen-garden/rake-stroke";
+import { ZenGardenRock } from "@/components/zen-garden/rock";
 
-function useZenGardenEditor(canvas: HTMLCanvasElement | null) {
+const ZenGardenV2Page: NextPage = () => {
   const [editor, setEditor] = useState<ZenGardenEditor | null>(null);
-  const [state, setState] = useState({
-    selectedObjectId: null as string | null,
-    textureName: "gravel" as GroundTextureName,
-    ambientIntensity: 0.4,
-    sunIntensity: 0.8,
-    objects: [] as ZenGardenObject[],
-    mode: "normal" as EditorMode,
-  });
+  const [showNodeGraph, setShowNodeGraph] = useState(false);
 
   useEffect(() => {
+    const canvas = document.getElementById("canvas") as HTMLCanvasElement;
     if (!canvas) return;
-    const ed = new ZenGardenEditor(canvas);
+
+    const ed = new ZenGardenEditor(canvas, {
+      plain: { 
+        size: { x: 10, y: 5 },
+        textureName: "gravel",
+      },
+      objects: [
+        { id: "rock1", type: "rock", position: { x: -1, y: 0 } },
+        { id: "rock2", type: "rock", position: { x: 1, y: 1 } },
+        { id: "moss1", type: "moss", position: { x: 0, y: 0 }, polygonPath: [
+          { x: -2, y: -2 },
+          { x: -1, y: -2 },
+          { x: -1, y: -1 },
+          { x: -2, y: -1 },
+        ]},
+        { id: "rake1", type: "rakeStroke", path: { type: "circle", center: { x: 2, y: 0 }, radius: 1 }, width: 0.5, numberOfForks: 3, forkDepth: 0.1 },
+        { id: "rake2", type: "rakeStroke", path: { type: "points", points: [{ x: -3, y: -1 }, { x: -2, y: 0 }, { x: -3, y: 1 }], closed: false }, width: 0.5, numberOfForks: 3, forkDepth: 0.1 },
+      ],
+    });
     setEditor(ed);
+
     return () => ed.dispose();
-  }, [canvas]);
-
-  useEffect(() => {
-    if (!editor) return;
-
-    const subs = [
-      editor.$selectedObjectId.subscribe((v) =>
-        setState((s) => ({ ...s, selectedObjectId: v }))
-      ),
-      editor.$groundTextureName.subscribe((v) =>
-        setState((s) => ({ ...s, textureName: v }))
-      ),
-      editor.$ambientIntensity.subscribe((v) =>
-        setState((s) => ({ ...s, ambientIntensity: v }))
-      ),
-      editor.$sunIntensity.subscribe((v) =>
-        setState((s) => ({ ...s, sunIntensity: v }))
-      ),
-      editor.$objects.subscribe((v) => setState((s) => ({ ...s, objects: v }))),
-      editor.$mode.subscribe((v) => setState((s) => ({ ...s, mode: v }))),
-    ];
-
-    return () => subs.forEach((s) => s.unsubscribe());
-  }, [editor]);
-
-  if (!editor) return null;
-
-  return {
-    editor,
-    ...state,
-    selectedObject: state.selectedObjectId
-      ? editor.getObject(state.selectedObjectId)
-      : null,
-  };
-}
-
-interface RockEditorProps {
-  rock: ZenGardenRock;
-  onUpdate: (settings: RockWaveSettings) => void;
-  onDelete: () => void;
-  onClose: () => void;
-}
-
-function RockEditor({ rock, onUpdate, onDelete, onClose }: RockEditorProps) {
-  const settings = rock.waveSettings ?? DEFAULT_ROCK_WAVE_SETTINGS;
+  }, []);
 
   return (
-    <div className="absolute right-4 top-4 w-64 rounded-lg bg-white/90 p-4 shadow-lg backdrop-blur">
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="font-semibold text-gray-800">Rock Settings</h3>
-        <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-          ✕
-        </button>
-      </div>
-
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm text-gray-600">
-            Radius: {settings.radius.toFixed(2)}
-          </label>
-          <input
-            type="range"
-            min="0.1"
-            max="1"
-            step="0.05"
-            value={settings.radius}
-            onChange={(e) =>
-              onUpdate({ ...settings, radius: parseFloat(e.target.value) })
-            }
-            className="w-full"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm text-gray-600">
-            Wave Count: {settings.waveCount}
-          </label>
-          <input
-            type="range"
-            min="1"
-            max="10"
-            step="1"
-            value={settings.waveCount}
-            onChange={(e) =>
-              onUpdate({ ...settings, waveCount: parseInt(e.target.value) })
-            }
-            className="w-full"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm text-gray-600">
-            Wave Spacing: {settings.waveSpacing.toFixed(2)}
-          </label>
-          <input
-            type="range"
-            min="0.1"
-            max="0.8"
-            step="0.01"
-            value={settings.waveSpacing}
-            onChange={(e) =>
-              onUpdate({ ...settings, waveSpacing: parseFloat(e.target.value) })
-            }
-            className="w-full"
-          />
-        </div>
-
-        <button
-          onClick={onDelete}
-          className="w-full rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600"
-        >
-          Delete Rock
-        </button>
-      </div>
-    </div>
-  );
-}
-
-interface SettingsPanelProps {
-  textureName: GroundTextureName;
-  ambientIntensity: number;
-  sunIntensity: number;
-  mode: EditorMode;
-  onTextureChange: (name: GroundTextureName) => void;
-  onAmbientChange: (value: number) => void;
-  onSunChange: (value: number) => void;
-  onCreateMoss: () => void;
-}
-
-function SettingsPanel({
-  textureName,
-  ambientIntensity,
-  sunIntensity,
-  mode,
-  onTextureChange,
-  onAmbientChange,
-  onSunChange,
-  onCreateMoss,
-}: SettingsPanelProps) {
-  return (
-    <div className="absolute left-4 top-4 w-56 rounded-lg bg-white/90 p-3 shadow-lg backdrop-blur">
-      <h3 className="mb-3 font-semibold text-gray-800">Settings</h3>
-
-      <div className="space-y-3">
-        <div>
-          <label className="mb-1 block text-sm text-gray-600">
-            Ground Texture
-          </label>
-          <select
-            value={textureName}
-            onChange={(e) => onTextureChange(e.target.value as GroundTextureName)}
-            className="block w-full rounded-md border border-gray-300 px-2 py-1 text-sm text-black shadow-sm"
-          >
-            <option value="gravel">Gravel</option>
-            <option value="grass">Grass</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm text-gray-600">
-            Ambient: {ambientIntensity.toFixed(2)}
-          </label>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.05"
-            value={ambientIntensity}
-            onChange={(e) => onAmbientChange(parseFloat(e.target.value))}
-            className="w-full"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm text-gray-600">
-            Sun: {sunIntensity.toFixed(2)}
-          </label>
-          <input
-            type="range"
-            min="0"
-            max="2"
-            step="0.05"
-            value={sunIntensity}
-            onChange={(e) => onSunChange(parseFloat(e.target.value))}
-            className="w-full"
-          />
-        </div>
-
-        <button
-          onClick={onCreateMoss}
-          className={`w-full rounded px-3 py-2 text-sm font-medium ${
-            mode === "createMoss"
-              ? "bg-green-600 text-white"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-          }`}
-        >
-          {mode === "createMoss" ? "Click garden to place moss" : "Create Moss"}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-const ZenGardenPage: NextPage = () => {
-  const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
-  const ctx = useZenGardenEditor(canvas);
-
-  return (
-    <div className="relative h-screen w-screen">
-      <canvas ref={setCanvas} className="w-full h-full" />
-
-      {ctx && (
+    <>
+      <canvas id="canvas" className="w-full h-full" />
+      {editor && (
         <>
-          <SettingsPanel
-            textureName={ctx.textureName}
-            ambientIntensity={ctx.ambientIntensity}
-            sunIntensity={ctx.sunIntensity}
-            mode={ctx.mode}
-            onTextureChange={(name) => ctx.editor.setGroundTexture(name)}
-            onAmbientChange={(value) => ctx.editor.setAmbientIntensity(value)}
-            onSunChange={(value) => ctx.editor.setSunIntensity(value)}
-            onCreateMoss={() => ctx.editor.setMode("createMoss")}
-          />
-
-          {ctx.selectedObject?.type === "rock" && (
-            <RockEditor
-              rock={ctx.selectedObject}
-              onUpdate={(settings) =>
-                ctx.editor.updateRockSettings(ctx.selectedObject!.id, settings)
-              }
-              onDelete={() => ctx.editor.deleteRock(ctx.selectedObject!.id)}
-              onClose={() => ctx.editor.$selectedObjectId.next(null)}
+          {/* <PlainSizePanel editor={editor} /> */}
+          <ObjectPanel editor={editor} />
+          <AddPanel editor={editor} />
+          <button
+            onClick={() => setShowNodeGraph(true)}
+            className="fixed left-4 bottom-4 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+          >
+            Node Graph
+          </button>
+          {showNodeGraph && (
+            <NodeGraphViewer
+              sinkNodes={[
+                editor.scene.plain.materialNode,
+                editor.scene.plain.geometryNode,
+              ]}
+              renderer={editor.threeRenderer}
+              onClose={() => setShowNodeGraph(false)}
             />
-          )}
-
-          {ctx.selectedObject?.type === "moss" && (
-            <div className="absolute right-4 top-4 w-64 rounded-lg bg-white/90 p-4 shadow-lg backdrop-blur">
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="font-semibold text-gray-800">Moss Settings</h3>
-                <button
-                  onClick={() => ctx.editor.$selectedObjectId.next(null)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  ✕
-                </button>
-              </div>
-              <p className="text-sm text-gray-600">
-                Drag points to reshape the moss.
-              </p>
-            </div>
           )}
         </>
       )}
-    </div>
+    </>
   );
 };
 
-export default ZenGardenPage;
+export default ZenGardenV2Page;
+
+function ObjectPanel({ editor }: { editor: ZenGardenEditor }) {
+  const selected = useObservable(editor.$selectedObject);
+
+  if (!selected) return null;
+
+  const onDelete = () => editor.deleteObject(selected.id);
+
+  return (
+    <div className="fixed right-4 top-4 bg-white text-black p-4 rounded-lg space-y-2">
+      {(() => {
+        if (selected instanceof ZenGardenRock) {
+          return <RockPanel rock={selected} />;
+        } else if (selected instanceof ZenGardenMoss) {
+          return <MossPanel moss={selected} />;
+        } else if (selected instanceof ZenGardenRakeStroke) {
+          return <RakeStrokePanel rakeStroke={selected} />;
+        } else {
+          throw new Error("not implemented yet")
+        }
+      })()}
+      <button
+        onClick={onDelete}
+        className="w-full px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+      >
+        Delete
+      </button>
+    </div>
+  );
+}
+
+function RockPanel({ rock }: { rock: ZenGardenRock }) {
+  return (
+    <>
+      <h3 className="font-bold">Rock</h3>
+      <p>ID: {rock.id}</p>
+    </>
+  );
+}
+
+function MossPanel({ moss }: { moss: ZenGardenMoss }) {
+  return (
+    <>
+      <h3 className="font-bold">Moss</h3>
+      <p>ID: {moss.id}</p>
+    </>
+  );
+}
+
+function RakeStrokePanel({ rakeStroke }: { rakeStroke: ZenGardenRakeStroke }) {
+  return (
+    <>
+      <h3 className="font-bold">Rake Stroke</h3>
+      <p>ID: {rakeStroke.id}</p>
+      <label className="block">
+        Width:
+        <input
+          type="number"
+          step="0.1"
+          defaultValue={rakeStroke.width}
+          onChange={(e) => { rakeStroke.width = Number(e.target.value); }}
+          className="ml-2 w-20 px-2 py-1 bg-white/20 rounded"
+        />
+      </label>
+    </>
+  );
+}
+
+function AddPanel({ editor }: { editor: ZenGardenEditor }) {
+  const mode = useObservable(editor.$mode);
+
+  if (mode) {
+    return (
+      <div className="fixed right-4 bottom-4 bg-white text-black p-4 rounded-lg">
+        <button
+          onClick={() => editor.setMode(null)}
+          className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+        >
+          Cancel
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed right-4 bottom-4 bg-white text-black p-4 rounded-lg space-x-2">
+      <button
+        onClick={() => editor.setMode("addRock")}
+        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+      >
+        Add Rock
+      </button>
+      <button
+        onClick={() => editor.setMode("addMoss")}
+        className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+      >
+        Add Moss
+      </button>
+    </div>
+  );
+}
+
+function useObservable<T>(observable: Observable<T>): T | null {
+  const [value, setValue] = useState<T | null>(null);
+  useEffect(() => {
+    const sub = observable.subscribe(setValue);
+    return () => sub.unsubscribe();
+  }, [observable]);
+  return value;
+}
