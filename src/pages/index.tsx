@@ -1,4 +1,5 @@
 import type { GetServerSideProps, NextPage } from "next";
+import Link from "next/link";
 import { twMerge } from "tailwind-merge";
 
 export const getServerSideProps: GetServerSideProps = async () => {
@@ -30,6 +31,7 @@ function Home() {
         <div className="space-y-12 py-8">
           <AboutSection />
           <PresentationSection />
+          <HobbySection />
         </div>
       </main>
     </>
@@ -206,4 +208,29 @@ function PresentationSection() {
       </div>
     </section>
   );
+}
+
+function HobbySection() {
+  return     <section
+    className={twMerge(
+      "relative w-full",
+      "max-w-lg px-4",
+      "lg:max-w-5xl lg:px-0"
+    )}
+  >
+    <h1 className="pb-6 pt-4 text-3xl font-semibold">Hobbies</h1>
+    <div
+      className={twMerge(
+        "grid",
+        "grid-cols-1 gap-5",
+        "lg:gap-3 lg:grid-cols-3"
+      )}
+    >
+      <div>
+        <Link href={"/zen-garden"} className="hover:text-blue-500">
+          Zen Garden
+        </Link>      
+      </div>
+    </div>
+  </section>;
 }
