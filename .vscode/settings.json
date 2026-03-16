@@ -1,0 +1,10 @@
+{
+    "eslint.workingDirectories": [
+        { "directory": "packages/frontend", "changeProcessCWD": true },
+        { "directory": "packages/backend", "changeProcessCWD": true },
+        { "directory": "packages/edge", "changeProcessCWD": true }
+    ],
+    "eslint.options": {
+        "flags": ["unstable_ts_config"]
+    }
+}
