@@ -2,9 +2,9 @@
 import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { parseArgs } from "node:util";
 
 import { chromium } from "playwright";
+import { z } from "zod";
 
 import { loadConfig } from "shared/config";
 
@@ -14,16 +14,32 @@ const TMP_DIR = path.join(process.cwd(), ".tmp");
 const CDP_PORT = 9223;
 const edgeUrl = `http://localhost:${config.edge.devPort}`;
 
-// --- Command definitions (single source of truth) ---
+// --- Command framework ---
 
-interface Command {
-  description: string;
-  usage?: string;
-  run: (args: string[]) => Promise<void>;
+type Command =
+  | { description: string; args: z.ZodTuple; run: (...args: string[]) => Promise<void> }
+  | { description: string; args?: undefined; run: () => Promise<void> };
+
+function defineCommand<T extends z.ZodTuple>(def: { description: string; args: T; run: (...args: z.infer<T>) => Promise<void> }): Command;
+function defineCommand(def: { description: string; run: () => Promise<void> }): Command;
+function defineCommand(def: Command): Command { return def; }
+
+function usageFromSchema(name: string, schema?: z.ZodTuple): string {
+  if (!schema) return name;
+  const items = schema._zod.def.items as z.ZodTypeAny[];
+  const labels = items.map((item) => {
+    const isOptional = item._zod.def.type === "optional";
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const label = item.description ?? (item._zod.def as any).innerType?.description ?? "arg";
+    return isOptional ? `[${label}]` : `<${label}>`;
+  });
+  return `${name} ${labels.join(" ")}`;
 }
 
+// --- Commands ---
+
 const commands: Record<string, Command> = {
-  start: {
+  start: defineCommand({
     description: "Start headless Chrome (stores CDP endpoint)",
     run: async () => {
       const existing = readE2eStatus();
@@ -60,9 +76,9 @@ const commands: Record<string, Command> = {
       writeE2eStatus({ cdpEndpoint: endpoint, pid: chrome.pid });
       console.log(`started | pid:${chrome.pid} | ${endpoint}`);
     },
-  },
+  }),
 
-  stop: {
+  stop: defineCommand({
     description: "Stop headless Chrome",
     run: async () => {
       const s = readE2eStatus();
@@ -74,130 +90,92 @@ const commands: Record<string, Command> = {
       deleteE2eStatus();
       console.log("stopped");
     },
-  },
+  }),
 
-  navigate: {
+  navigate: defineCommand({
     description: "Navigate to path (relative to edge proxy)",
-    usage: "<path>",
-    run: (args) => {
-      const { positionals } = parseArgs({ args, allowPositionals: true, strict: false });
-      const target = positionals[0];
-      if (!target) { console.error("Missing <path>"); process.exit(1); }
-      return withPage(async (page) => {
-        const url = target.startsWith("http") ? target : `${edgeUrl}${target}`;
-        await page.goto(url, { waitUntil: "networkidle" });
-        console.log(`navigated to ${page.url()}`);
-      });
-    },
-  },
+    args: z.tuple([z.string().describe("path")]),
+    run: (target) => withPage(async (page) => {
+      const url = target.startsWith("http") ? target : `${edgeUrl}${target}`;
+      await page.goto(url, { waitUntil: "networkidle" });
+      console.log(`navigated to ${page.url()}`);
+    }),
+  }),
 
-  screenshot: {
+  screenshot: defineCommand({
     description: "Take screenshot",
-    usage: "[--out <path>]",
-    run: (args) => {
-      const { values } = parseArgs({ args, options: { out: { type: "string" } }, strict: false });
-      return withPage(async (page) => {
-        const out = String(values.out ?? path.join(TMP_DIR, `screenshot-${Date.now()}.png`));
-        await page.screenshot({ path: out, fullPage: true });
-        console.log(out);
-      });
-    },
-  },
+    args: z.tuple([z.string().describe("out-path").optional()]),
+    run: (outPath) => withPage(async (page) => {
+      const out = outPath ?? path.join(TMP_DIR, `screenshot-${Date.now()}.png`);
+      await page.screenshot({ path: out, fullPage: true });
+      console.log(out);
+    }),
+  }),
 
-  "run-js": {
+  "run-js": defineCommand({
     description: "Execute JS in page, print result",
-    usage: "<expression>",
-    run: (args) => {
-      const { positionals } = parseArgs({ args, allowPositionals: true, strict: false });
-      const expr = positionals.join(" ");
-      if (!expr) { console.error("Missing <expression>"); process.exit(1); }
-      return withPage(async (page) => {
-        const result = await page.evaluate(expr);
-        console.log(JSON.stringify(result, null, 2));
-      });
-    },
-  },
+    args: z.tuple([z.string().describe("expression")]),
+    run: (expr) => withPage(async (page) => {
+      const result = await page.evaluate(expr);
+      console.log(JSON.stringify(result, null, 2));
+    }),
+  }),
 
-  click: {
+  click: defineCommand({
     description: "Click element",
-    usage: "<selector>",
-    run: (args) => {
-      const { positionals } = parseArgs({ args, allowPositionals: true, strict: false });
-      const selector = positionals[0];
-      if (!selector) { console.error("Missing <selector>"); process.exit(1); }
-      return withPage(async (page) => {
-        await page.click(selector);
-        console.log(`clicked ${selector}`);
-      });
-    },
-  },
+    args: z.tuple([z.string().describe("selector")]),
+    run: (selector) => withPage(async (page) => {
+      await page.click(selector);
+      console.log(`clicked ${selector}`);
+    }),
+  }),
 
-  type: {
+  type: defineCommand({
     description: "Type into element",
-    usage: "<selector> <text>",
-    run: (args) => {
-      const { positionals } = parseArgs({ args, allowPositionals: true, strict: false });
-      const selector = positionals[0];
-      const text = positionals.slice(1).join(" ");
-      if (!selector || !text) { console.error("Missing <selector> <text>"); process.exit(1); }
-      return withPage(async (page) => {
-        await page.fill(selector, text);
-        console.log(`typed into ${selector}`);
-      });
-    },
-  },
+    args: z.tuple([z.string().describe("selector"), z.string().describe("text")]),
+    run: (selector, text) => withPage(async (page) => {
+      await page.fill(selector, text);
+      console.log(`typed into ${selector}`);
+    }),
+  }),
 
-  wait: {
+  wait: defineCommand({
     description: "Wait for element to appear",
-    usage: "<selector>",
-    run: (args) => {
-      const { positionals } = parseArgs({ args, allowPositionals: true, strict: false });
-      const selector = positionals[0];
-      if (!selector) { console.error("Missing <selector>"); process.exit(1); }
-      return withPage(async (page) => {
-        await page.waitForSelector(selector, { timeout: 30_000 });
-        console.log(`found ${selector}`);
-      });
-    },
-  },
+    args: z.tuple([z.string().describe("selector")]),
+    run: (selector) => withPage(async (page) => {
+      await page.waitForSelector(selector, { timeout: 30_000 });
+      console.log(`found ${selector}`);
+    }),
+  }),
 
-  "set-viewport": {
+  "set-viewport": defineCommand({
     description: "Set viewport size",
-    usage: "<width> <height>",
-    run: (args) => {
-      const { positionals } = parseArgs({ args, allowPositionals: true, strict: false });
-      const w = Number(positionals[0]);
-      const h = Number(positionals[1]);
-      if (!w || !h) { console.error("Missing <width> <height>"); process.exit(1); }
-      return withPage(async (page) => {
-        await page.setViewportSize({ width: w, height: h });
-        console.log(`viewport set to ${w}x${h}`);
-      });
-    },
-  },
+    args: z.tuple([z.coerce.number().describe("width"), z.coerce.number().describe("height")]),
+    run: (w, h) => withPage(async (page) => {
+      await page.setViewportSize({ width: w, height: h });
+      console.log(`viewport set to ${w}x${h}`);
+    }),
+  }),
 
-  "page-text": {
+  "page-text": defineCommand({
     description: "Print page text content",
     run: () => withPage(async (page) => {
       const text = await page.evaluate(() => document.body.innerText);
       console.log(text);
     }),
-  },
+  }),
 };
 
 // --- Main ---
 
 async function main() {
-  const args = process.argv.slice(2);
-  const { positionals } = parseArgs({ args, allowPositionals: true, strict: false });
-  const commandName = positionals[0];
+  const [commandName, ...rest] = process.argv.slice(2);
 
   if (!commandName || commandName === "help") {
-    const lines = Object.entries(commands).map(([name, cmd]) => {
-      const label = cmd.usage ? `${name} ${cmd.usage}` : name;
-      return `  ${label.padEnd(26)} ${cmd.description}`;
-    });
-    console.log(`\nUsage: npm run e2e <command> [options]\n\nCommands:\n${lines.join("\n")}\n`);
+    const lines = Object.entries(commands).map(([name, cmd]) =>
+      `  ${usageFromSchema(name, cmd.args).padEnd(30)} ${cmd.description}`
+    );
+    console.log(`\nUsage: npm run e2e <command> [args]\n\nCommands:\n${lines.join("\n")}\n`);
     return;
   }
 
@@ -207,7 +185,16 @@ async function main() {
     process.exit(1);
   }
 
-  await command.run(args.slice(1));
+  if (command.args) {
+    const parsed = command.args.safeParse(rest);
+    if (!parsed.success) {
+      console.error(`Usage: npm run e2e ${usageFromSchema(commandName, command.args)}`);
+      process.exit(1);
+    }
+    await command.run(...(parsed.data as string[]));
+  } else {
+    await command.run();
+  }
 }
 
 void main();
