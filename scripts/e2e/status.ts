@@ -39,17 +39,3 @@ export function requireRunning(): E2eStatus {
   }
   return s;
 }
-
-export async function waitForCdp(port: number, timeoutMs = 10_000): Promise<string> {
-  const start = Date.now();
-  while (Date.now() - start < timeoutMs) {
-    try {
-      const res = await fetch(`http://127.0.0.1:${port}/json/version`);
-      const data = await res.json() as { webSocketDebuggerUrl: string };
-      return data.webSocketDebuggerUrl;
-    } catch {
-      await new Promise((r) => setTimeout(r, 200));
-    }
-  }
-  throw new Error(`Timed out waiting for CDP on port ${port}`);
-}
