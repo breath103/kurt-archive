@@ -1,3 +1,5 @@
+process.title = "dev:backend:server";
+
 import path from "node:path";
 
 import { loadConfig } from "shared/config";
