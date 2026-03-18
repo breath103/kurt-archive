@@ -9,6 +9,7 @@ import { DevProcess } from "./dev-process.js";
 
 async function main() {
   process.title = "dev:main";
+  console.log(`dev:main pid=${process.pid}`);
   const config = loadConfig();
   const { values } = parseArgs({
     options: {
