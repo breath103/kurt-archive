@@ -17,7 +17,10 @@ export class DevProcess {
 
     // detached: true makes the child its own process group leader.
     // This lets us kill the entire subtree (npm → tsx → server) with kill(-pid).
-    this.child = spawn(command, args, { stdio: ["ignore", "pipe", "pipe"], detached: true, cwd: options.cwd });
+    const cwd = options.cwd ?? ".";
+    this.child = spawn(command, args, { stdio: ["ignore", "pipe", "pipe"], detached: true, cwd });
+
+    console.log(`\x1b[2m[${name}] pid=${this.child.pid} cwd=${cwd} cmd=${command} ${args.join(" ")}\x1b[0m`);
 
     this.child.stdout?.on("data", (d: Buffer) => this.pipe(d, process.stdout));
     this.child.stderr?.on("data", (d: Buffer) => { if (!this._killed) this.pipe(d, process.stderr); });
