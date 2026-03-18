@@ -1,3 +1,4 @@
+#!/usr/bin/env -S npx tsx --tsconfig scripts/tsconfig.json
 import { parseArgs } from "node:util";
 
 import { sanitizeBranchName } from "shared/branch";

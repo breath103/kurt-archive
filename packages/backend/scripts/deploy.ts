@@ -1,3 +1,4 @@
+#!/usr/bin/env -S npx tsx --tsconfig scripts/tsconfig.json
 import { execSync } from "node:child_process";
 import path from "node:path";
 import { parseArgs } from "node:util";
