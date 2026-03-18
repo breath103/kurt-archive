@@ -6,7 +6,7 @@
   ],
   "scripts": {
     "setup": "./scripts/setup.ts",
-    "dev": "./scripts/dev.ts",
+    "dev": "./scripts/dev/index.ts",
     "e2e": "./scripts/e2e/index.ts",
     "lint": "sh -c 'concurrently \"npm run lint -w backend -- $*\" \"npm run lint -w frontend -- $*\"' --",
     "build:types": "npm run build:types -w backend && npm run build:types -w frontend",
