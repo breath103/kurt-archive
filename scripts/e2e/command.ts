@@ -1,19 +1,28 @@
 import { z } from "zod";
 
-export type Command =
-  | { description: string; args: z.ZodTuple; run: (...args: string[]) => Promise<void> }
-  | { description: string; args?: undefined; run: () => Promise<void> };
+export class Command<T extends z.ZodTuple = z.ZodTuple> {
+  constructor(
+    public readonly description: string,
+    public readonly args: T,
+    private readonly handler: (...args: z.infer<T>) => Promise<void>,
+  ) {}
 
-export function defineCommand<T extends z.ZodTuple>(def: { description: string; args: T; run: (...args: z.infer<T>) => Promise<void> }): Command;
-export function defineCommand(def: { description: string; run: () => Promise<void> }): Command;
-export function defineCommand(def: Command): Command { return def; }
+  get usage(): string {
+    const items = this.args._zod.def.items as z.ZodTypeAny[];
+    if (items.length === 0) return "";
+    return " " + items.map((item) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const label = item.description ?? (item._zod.def as any).innerType?.description ?? "arg";
+      return item.isOptional() ? `[${label}]` : `<${label}>`;
+    }).join(" ");
+  }
 
-export function usageFromSchema(name: string, schema?: z.ZodTuple): string {
-  if (!schema) return name;
-  const items = schema._zod.def.items as z.ZodTypeAny[];
-  const labels = items.map((item) => {
-    const label = item.description ?? "arg";
-    return item.isOptional() ? `[${label}]` : `<${label}>`;
-  });
-  return `${name} ${labels.join(" ")}`;
+  async run(rawArgs: string[]): Promise<void> {
+    const parsed = this.args.safeParse(rawArgs);
+    if (!parsed.success) {
+      console.error(`Usage: npm run e2e ${this.description}`);
+      process.exit(1);
+    }
+    await this.handler(...(parsed.data as z.infer<T>));
+  }
 }
