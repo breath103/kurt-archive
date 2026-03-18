@@ -42,12 +42,15 @@ if (!root) {
   process.exit(1);
 }
 
-function printTree(proc: Proc, prefix = "", isLast = true) {
-  const connector = prefix === "" ? "" : isLast ? "└─ " : "├─ ";
-  console.log(`${prefix}${connector}\x1b[2mpid=${proc.pid}\x1b[0m ${proc.command}`);
-  const childPrefix = prefix === "" ? "" : prefix + (isLast ? "   " : "│  ");
+function printNode(proc: Proc, prefix: string, childrenPrefix: string) {
+  console.log(`${prefix}\x1b[2mpid=${proc.pid}\x1b[0m ${proc.command}`);
   for (let i = 0; i < proc.children.length; i++) {
-    printTree(proc.children[i], childPrefix, i === proc.children.length - 1);
+    const isLast = i === proc.children.length - 1;
+    printNode(
+      proc.children[i],
+      childrenPrefix + (isLast ? "└── " : "├── "),
+      childrenPrefix + (isLast ? "    " : "│   "),
+    );
   }
 }
 
@@ -56,5 +59,5 @@ function countAll(proc: Proc): number {
 }
 
 console.log();
-printTree(root);
+printNode(root, "", "");
 console.log(`\n\x1b[2mTotal: ${countAll(root)} processes\x1b[0m`);
