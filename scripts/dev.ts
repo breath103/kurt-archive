@@ -5,8 +5,6 @@ import { parseArgs } from "node:util";
 import { merge, ReplaySubject } from "rxjs";
 import { loadConfig } from "shared/config";
 
-const config = loadConfig();
-
 class DevProcess {
   readonly name: string;
   readonly $crashed = new ReplaySubject<void>(1);
@@ -91,6 +89,7 @@ class DevProcess {
 }
 
 async function main() {
+  const config = loadConfig();
   const { values } = parseArgs({
     options: {
       env: { type: "string", short: "e", default: "development" },
