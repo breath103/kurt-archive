@@ -5,8 +5,8 @@
     "packages/*"
   ],
   "scripts": {
-    "setup": "tsx scripts/setup.ts",
-    "dev": "tsx scripts/dev.ts",
+    "setup": "./scripts/setup.ts",
+    "dev": "./scripts/dev.ts",
     "lint": "sh -c 'concurrently \"npm run lint -w backend -- $*\" \"npm run lint -w frontend -- $*\"' --",
     "build:types": "npm run build:types -w backend && npm run build:types -w frontend",
     "prepare": "husky"
