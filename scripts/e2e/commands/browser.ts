@@ -1,9 +1,25 @@
 import path from "node:path";
 
+import { chromium } from "playwright";
 import { z } from "zod";
 
 import { Command } from "../command.js";
-import { TMP_DIR, edgeUrl, withPage } from "../helpers.js";
+import { TMP_DIR, edgeUrl } from "../helpers.js";
+import * as status from "../status.js";
+
+async function withPage<T>(fn: (page: import("playwright").Page) => Promise<T>): Promise<T> {
+  const e2e = status.requireRunning();
+  const browser = await chromium.connectOverCDP(e2e.cdpEndpoint);
+  try {
+    const contexts = browser.contexts();
+    const context = contexts[0] ?? await browser.newContext();
+    const pages = context.pages();
+    const page = pages[0] ?? await context.newPage();
+    return await fn(page);
+  } finally {
+    await browser.close();
+  }
+}
 
 export const navigate = new Command("Navigate to path (relative to edge proxy)",
   z.tuple([z.string().describe("path")]),
