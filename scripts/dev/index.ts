@@ -18,12 +18,12 @@ async function main() {
     strict: false,
   });
 
-  const envFlag = [`--`, `--env=${values.env}`];
+  const envFlag = [`--env=${values.env}`];
 
-  const backend = new DevProcess("Backend", "npm", ["run", "dev", "-w", "backend", ...envFlag], { color: "\x1b[34m" });
-  const frontend = new DevProcess("Frontend", "npm", ["run", "dev", "-w", "frontend", ...envFlag], { color: "\x1b[32m" });
-  const edge = new DevProcess("Edge", "npm", ["run", "dev", "-w", "edge"], { color: "\x1b[35m" });
-  const types = new DevProcess("Types", "npm", ["run", "dev:types", "-w", "backend"], { color: "\x1b[33m" });
+  const backend = new DevProcess("Backend", "./scripts/dev.ts", envFlag, { color: "\x1b[34m", cwd: "packages/backend" });
+  const frontend = new DevProcess("Frontend", "./scripts/dev.ts", envFlag, { color: "\x1b[32m", cwd: "packages/frontend" });
+  const edge = new DevProcess("Edge", "./scripts/dev.ts", [], { color: "\x1b[35m", cwd: "packages/edge" });
+  const types = new DevProcess("Types", "./scripts/dev-types.ts", [], { color: "\x1b[33m", cwd: "packages/backend" });
 
   const critical = [backend, frontend, edge];
   const all = [backend, frontend, edge, types];
@@ -57,9 +57,9 @@ async function main() {
 
   try {
     await Promise.all([
-      backend.waitForStdout({ pattern: "Backend running on", timeout: 30_000 }),
-      frontend.waitForStdout({ pattern: "Local:", timeout: 30_000 }),
-      edge.waitForStdout({ pattern: "Edge proxy running on", timeout: 30_000 }),
+      backend.waitForStdout({ pattern: "Backend running on", timeout: 1000 * 5 }),
+      frontend.waitForStdout({ pattern: "Local:", timeout: 1000 * 5 }),
+      edge.waitForStdout({ pattern: "Edge proxy running on", timeout: 1000 * 5 }),
     ]);
   } catch (error) {
     console.error(`\x1b[31m${error instanceof Error ? error.message : error}\x1b[0m`);

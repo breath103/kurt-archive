@@ -11,13 +11,13 @@ export class DevProcess {
   private _killed = false;
   private _exited = false;
 
-  constructor(name: string, command: string, args: string[], options: { color: string }) {
+  constructor(name: string, command: string, args: string[], options: { color: string; cwd?: string }) {
     this.name = name;
     this.color = options.color;
 
     // detached: true makes the child its own process group leader.
     // This lets us kill the entire subtree (npm → tsx → server) with kill(-pid).
-    this.child = spawn(command, args, { stdio: ["ignore", "pipe", "pipe"], detached: true });
+    this.child = spawn(command, args, { stdio: ["ignore", "pipe", "pipe"], detached: true, cwd: options.cwd });
 
     this.child.stdout?.on("data", (d: Buffer) => this.pipe(d, process.stdout));
     this.child.stderr?.on("data", (d: Buffer) => { if (!this._killed) this.pipe(d, process.stderr); });

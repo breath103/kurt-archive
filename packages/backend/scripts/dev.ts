@@ -1,12 +1,22 @@
+#!/usr/bin/env -S npx tsx --tsconfig scripts/tsconfig.json
 process.title = "dev:backend:watcher";
 
 import type { ChildProcess } from "node:child_process";
 import { spawn } from "node:child_process";
 import { watch } from "node:fs";
 import path from "node:path";
+import { parseArgs } from "node:util";
 
 import { merge, Observable } from "rxjs";
 import { debounceTime, startWith } from "rxjs/operators";
+
+import { loadEnv } from "./lib/env.js";
+
+const { values } = parseArgs({
+  options: { env: { type: "string", short: "e", default: "development" } },
+  strict: false,
+});
+loadEnv(values.env);
 
 const ROOT = path.join(import.meta.dirname, "..");
 const srcPath = path.join(ROOT, "src");
