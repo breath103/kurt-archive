@@ -14,6 +14,177 @@ const TMP_DIR = path.join(process.cwd(), ".tmp");
 const CDP_PORT = 9223;
 const edgeUrl = `http://localhost:${config.edge.devPort}`;
 
+// --- Command definitions (single source of truth) ---
+
+interface Command {
+  description: string;
+  usage?: string;
+  run: (args: string[]) => Promise<void>;
+}
+
+const commands: Record<string, Command> = {
+  start: {
+    description: "Start headless Chrome (stores CDP endpoint)",
+    run: async () => {
+      const existing = readE2eStatus();
+      if (existing) {
+        try {
+          process.kill(existing.pid, 0);
+          console.log(`already running | pid:${existing.pid} | ${existing.cdpEndpoint}`);
+          return;
+        } catch {
+          deleteE2eStatus();
+        }
+      }
+
+      const chrome = spawn(chromium.executablePath(), [
+        "--headless=new",
+        `--remote-debugging-port=${CDP_PORT}`,
+        "--no-first-run",
+        "--no-default-browser-check",
+        "--disable-gpu",
+        "--disable-extensions",
+        "--disable-background-networking",
+        "--disable-sync",
+        "--window-size=1280,800",
+        `--user-data-dir=${path.join(TMP_DIR, "e2e-chrome-profile")}`,
+      ], { stdio: "ignore", detached: true });
+      chrome.unref();
+
+      if (!chrome.pid) {
+        console.error("Failed to start Chrome");
+        process.exit(1);
+      }
+
+      const endpoint = await waitForCdp(CDP_PORT);
+      writeE2eStatus({ cdpEndpoint: endpoint, pid: chrome.pid });
+      console.log(`started | pid:${chrome.pid} | ${endpoint}`);
+    },
+  },
+
+  stop: {
+    description: "Stop headless Chrome",
+    run: async () => {
+      const s = readE2eStatus();
+      if (!s) {
+        console.log("not running");
+        return;
+      }
+      try { process.kill(s.pid, "SIGTERM"); } catch { /* already dead */ }
+      deleteE2eStatus();
+      console.log("stopped");
+    },
+  },
+
+  navigate: {
+    description: "Navigate to path (relative to edge proxy)",
+    usage: "<path>",
+    run: (args) => {
+      const { positionals } = parseArgs({ args, allowPositionals: true, strict: false });
+      const target = positionals[0];
+      if (!target) { console.error("Missing <path>"); process.exit(1); }
+      return withPage(async (page) => {
+        const url = target.startsWith("http") ? target : `${edgeUrl}${target}`;
+        await page.goto(url, { waitUntil: "networkidle" });
+        console.log(`navigated to ${page.url()}`);
+      });
+    },
+  },
+
+  screenshot: {
+    description: "Take screenshot",
+    usage: "[--out <path>]",
+    run: (args) => {
+      const { values } = parseArgs({ args, options: { out: { type: "string" } }, strict: false });
+      return withPage(async (page) => {
+        const out = String(values.out ?? path.join(TMP_DIR, `screenshot-${Date.now()}.png`));
+        await page.screenshot({ path: out, fullPage: true });
+        console.log(out);
+      });
+    },
+  },
+
+  "run-js": {
+    description: "Execute JS in page, print result",
+    usage: "<expression>",
+    run: (args) => {
+      const { positionals } = parseArgs({ args, allowPositionals: true, strict: false });
+      const expr = positionals.join(" ");
+      if (!expr) { console.error("Missing <expression>"); process.exit(1); }
+      return withPage(async (page) => {
+        const result = await page.evaluate(expr);
+        console.log(JSON.stringify(result, null, 2));
+      });
+    },
+  },
+
+  click: {
+    description: "Click element",
+    usage: "<selector>",
+    run: (args) => {
+      const { positionals } = parseArgs({ args, allowPositionals: true, strict: false });
+      const selector = positionals[0];
+      if (!selector) { console.error("Missing <selector>"); process.exit(1); }
+      return withPage(async (page) => {
+        await page.click(selector);
+        console.log(`clicked ${selector}`);
+      });
+    },
+  },
+
+  type: {
+    description: "Type into element",
+    usage: "<selector> <text>",
+    run: (args) => {
+      const { positionals } = parseArgs({ args, allowPositionals: true, strict: false });
+      const selector = positionals[0];
+      const text = positionals.slice(1).join(" ");
+      if (!selector || !text) { console.error("Missing <selector> <text>"); process.exit(1); }
+      return withPage(async (page) => {
+        await page.fill(selector, text);
+        console.log(`typed into ${selector}`);
+      });
+    },
+  },
+
+  wait: {
+    description: "Wait for element to appear",
+    usage: "<selector>",
+    run: (args) => {
+      const { positionals } = parseArgs({ args, allowPositionals: true, strict: false });
+      const selector = positionals[0];
+      if (!selector) { console.error("Missing <selector>"); process.exit(1); }
+      return withPage(async (page) => {
+        await page.waitForSelector(selector, { timeout: 30_000 });
+        console.log(`found ${selector}`);
+      });
+    },
+  },
+
+  "set-viewport": {
+    description: "Set viewport size",
+    usage: "<width> <height>",
+    run: (args) => {
+      const { positionals } = parseArgs({ args, allowPositionals: true, strict: false });
+      const w = Number(positionals[0]);
+      const h = Number(positionals[1]);
+      if (!w || !h) { console.error("Missing <width> <height>"); process.exit(1); }
+      return withPage(async (page) => {
+        await page.setViewportSize({ width: w, height: h });
+        console.log(`viewport set to ${w}x${h}`);
+      });
+    },
+  },
+
+  "page-text": {
+    description: "Print page text content",
+    run: () => withPage(async (page) => {
+      const text = await page.evaluate(() => document.body.innerText);
+      console.log(text);
+    }),
+  },
+};
+
 // --- Main ---
 
 async function main() {
@@ -22,36 +193,13 @@ async function main() {
   const commandName = positionals[0];
 
   if (!commandName || commandName === "help") {
-    console.log(`
-Usage: npm run e2e <command> [options]
-
-Commands:
-  start                      Start headless Chrome (stores CDP endpoint)
-  stop                       Stop headless Chrome
-  navigate <path>            Navigate to path (relative to edge proxy)
-  screenshot [--out <path>]  Take screenshot (default: .tmp/screenshot-<ts>.png)
-  run-js <expression>        Execute JS in page, print result
-  click <selector>           Click element
-  type <selector> <text>     Type into element
-  wait <selector>            Wait for element to appear
-  set-viewport <w> <h>       Set viewport size (e.g. 1280 720)
-  page-text                  Print page text content
-`);
+    const lines = Object.entries(commands).map(([name, cmd]) => {
+      const label = cmd.usage ? `${name} ${cmd.usage}` : name;
+      return `  ${label.padEnd(26)} ${cmd.description}`;
+    });
+    console.log(`\nUsage: npm run e2e <command> [options]\n\nCommands:\n${lines.join("\n")}\n`);
     return;
   }
-
-  const commands: Record<string, (args: string[]) => Promise<void>> = {
-    start: cmdStart,
-    stop: cmdStop,
-    navigate: cmdNavigate,
-    screenshot: cmdScreenshot,
-    "run-js": cmdRunJs,
-    click: cmdClick,
-    type: cmdType,
-    wait: cmdWait,
-    "set-viewport": cmdSetViewport,
-    "page-text": cmdPageText,
-  };
 
   const command = commands[commandName];
   if (!command) {
@@ -59,156 +207,10 @@ Commands:
     process.exit(1);
   }
 
-  await command(args.slice(1));
+  await command.run(args.slice(1));
 }
 
 void main();
-
-// --- Commands ---
-
-async function cmdStart() {
-  const existing = readE2eStatus();
-  if (existing) {
-    try {
-      process.kill(existing.pid, 0);
-      console.log(`already running | pid:${existing.pid} | ${existing.cdpEndpoint}`);
-      return;
-    } catch {
-      deleteE2eStatus();
-    }
-  }
-
-  const chrome = spawn(chromium.executablePath(), [
-    "--headless=new",
-    `--remote-debugging-port=${CDP_PORT}`,
-    "--no-first-run",
-    "--no-default-browser-check",
-    "--disable-gpu",
-    "--disable-extensions",
-    "--disable-background-networking",
-    "--disable-sync",
-    "--window-size=1280,800",
-    `--user-data-dir=${path.join(TMP_DIR, "e2e-chrome-profile")}`,
-  ], { stdio: "ignore", detached: true });
-  chrome.unref();
-
-  if (!chrome.pid) {
-    console.error("Failed to start Chrome");
-    process.exit(1);
-  }
-
-  const endpoint = await waitForCdp(CDP_PORT);
-  writeE2eStatus({ cdpEndpoint: endpoint, pid: chrome.pid });
-  console.log(`started | pid:${chrome.pid} | ${endpoint}`);
-}
-
-async function cmdStop() {
-  const s = readE2eStatus();
-  if (!s) {
-    console.log("not running");
-    return;
-  }
-  try { process.kill(s.pid, "SIGTERM"); } catch { /* already dead */ }
-  deleteE2eStatus();
-  console.log("stopped");
-}
-
-async function cmdNavigate(args: string[]) {
-  const { positionals } = parseArgs({ args, allowPositionals: true, strict: false });
-  const target = positionals[0];
-  if (!target) {
-    console.error("Usage: npm run e2e navigate <path>");
-    process.exit(1);
-  }
-  await withPage(async (page) => {
-    const url = target.startsWith("http") ? target : `${edgeUrl}${target}`;
-    await page.goto(url, { waitUntil: "networkidle" });
-    console.log(`navigated to ${page.url()}`);
-  });
-}
-
-async function cmdScreenshot(args: string[]) {
-  const { values } = parseArgs({ args, options: { out: { type: "string" } }, strict: false });
-  await withPage(async (page) => {
-    const out = String(values.out ?? path.join(TMP_DIR, `screenshot-${Date.now()}.png`));
-    await page.screenshot({ path: out, fullPage: true });
-    console.log(out);
-  });
-}
-
-async function cmdRunJs(args: string[]) {
-  const { positionals } = parseArgs({ args, allowPositionals: true, strict: false });
-  const expr = positionals.join(" ");
-  if (!expr) {
-    console.error("Usage: npm run e2e run-js <expression>");
-    process.exit(1);
-  }
-  await withPage(async (page) => {
-    const result = await page.evaluate(expr);
-    console.log(JSON.stringify(result, null, 2));
-  });
-}
-
-async function cmdClick(args: string[]) {
-  const { positionals } = parseArgs({ args, allowPositionals: true, strict: false });
-  const selector = positionals[0];
-  if (!selector) {
-    console.error("Usage: npm run e2e click <selector>");
-    process.exit(1);
-  }
-  await withPage(async (page) => {
-    await page.click(selector);
-    console.log(`clicked ${selector}`);
-  });
-}
-
-async function cmdType(args: string[]) {
-  const { positionals } = parseArgs({ args, allowPositionals: true, strict: false });
-  const selector = positionals[0];
-  const text = positionals.slice(1).join(" ");
-  if (!selector || !text) {
-    console.error("Usage: npm run e2e type <selector> <text>");
-    process.exit(1);
-  }
-  await withPage(async (page) => {
-    await page.fill(selector, text);
-    console.log(`typed into ${selector}`);
-  });
-}
-
-async function cmdWait(args: string[]) {
-  const { positionals } = parseArgs({ args, allowPositionals: true, strict: false });
-  const selector = positionals[0];
-  if (!selector) {
-    console.error("Usage: npm run e2e wait <selector>");
-    process.exit(1);
-  }
-  await withPage(async (page) => {
-    await page.waitForSelector(selector, { timeout: 30_000 });
-    console.log(`found ${selector}`);
-  });
-}
-
-async function cmdSetViewport(args: string[]) {
-  const { positionals } = parseArgs({ args, allowPositionals: true, strict: false });
-  const w = Number(positionals[0]);
-  const h = Number(positionals[1]);
-  if (!w || !h) {
-    console.error("Usage: npm run e2e set-viewport <width> <height>");
-    process.exit(1);
-  }
-  await withPage(async (page) => {
-    await page.setViewportSize({ width: w, height: h });
-    console.log(`viewport set to ${w}x${h}`);
-  });
-}
-
-async function cmdPageText() {
-  await withPage(async (page) => {
-    const text = await page.evaluate(() => document.body.innerText);
-    console.log(text);
-  });
-}
 
 // --- Helpers ---
 
