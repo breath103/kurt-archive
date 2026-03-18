@@ -1,3 +1,5 @@
+process.title = "dev:edge";
+
 import http from "node:http";
 import { parseArgs } from "node:util";
 

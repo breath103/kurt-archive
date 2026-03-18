@@ -8,6 +8,7 @@ import { loadConfig } from "shared/config";
 import { DevProcess } from "./dev-process.js";
 
 async function main() {
+  process.title = "dev:main";
   const config = loadConfig();
   const { values } = parseArgs({
     options: {
@@ -26,11 +27,6 @@ async function main() {
 
   const critical = [backend, frontend, edge];
   const all = [backend, frontend, edge, types];
-
-  console.log(`\x1b[2mProcess tree (use PIDs to identify in ps/Activity Monitor):\x1b[0m`);
-  for (const p of all) {
-    console.log(`\x1b[2m  ${p.name.padEnd(10)} pid=${p.pid}  pgid=${p.pid}\x1b[0m`);
-  }
 
   // --- Register all handlers BEFORE any await ---
 
