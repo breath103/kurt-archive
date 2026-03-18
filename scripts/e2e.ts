@@ -130,7 +130,7 @@ async function cmdNavigate(args: string[]) {
 async function cmdScreenshot(args: string[]) {
   const { values } = parseArgs({ args, options: { out: { type: "string" } }, strict: false });
   await withPage(async (page) => {
-    const out = values.out ?? path.join(TMP_DIR, `screenshot-${Date.now()}.png`);
+    const out = String(values.out ?? path.join(TMP_DIR, `screenshot-${Date.now()}.png`));
     await page.screenshot({ path: out, fullPage: true });
     console.log(out);
   });
