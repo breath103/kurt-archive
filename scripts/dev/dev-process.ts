@@ -20,7 +20,7 @@ export class DevProcess {
     this.child = spawn(command, args, { stdio: ["ignore", "pipe", "pipe"], detached: true });
 
     this.child.stdout?.on("data", (d: Buffer) => this.pipe(d, process.stdout));
-    this.child.stderr?.on("data", (d: Buffer) => this.pipe(d, process.stderr));
+    this.child.stderr?.on("data", (d: Buffer) => { if (!this._killed) this.pipe(d, process.stderr); });
 
     this.child.on("exit", (code, signal) => {
       this._exited = true;
