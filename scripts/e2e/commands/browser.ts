@@ -4,11 +4,11 @@ import { chromium } from "playwright";
 import { z } from "zod";
 
 import { Command } from "../command.js";
-import { TMP_DIR, edgeUrl } from "../helpers.js";
-import * as status from "../status.js";
+import { TMP_DIR, edgeUrl } from "../constants.js";
+import { requireRunning } from "../status.js";
 
 async function withPage<T>(fn: (page: import("playwright").Page) => Promise<T>): Promise<T> {
-  const e2e = status.requireRunning();
+  const e2e = requireRunning();
   const browser = await chromium.connectOverCDP(e2e.cdpEndpoint);
   try {
     const contexts = browser.contexts();

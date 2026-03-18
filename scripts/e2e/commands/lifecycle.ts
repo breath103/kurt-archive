@@ -5,7 +5,7 @@ import { chromium } from "playwright";
 import { z } from "zod";
 
 import { Command } from "../command.js";
-import { TMP_DIR } from "../helpers.js";
+import { TMP_DIR } from "../constants.js";
 import * as status from "../status.js";
 
 export const start = new Command("Start headless Chrome (stores CDP endpoint)", z.tuple([]), async () => {
