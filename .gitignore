@@ -3,13 +3,18 @@ dist
 cdk.out
 *.log
 .DS_Store
+.tmp
 
 # Environment files (contain secrets)
 .env
+.env.development
 .env.production
 
 # Claude local settings
 .claude/settings.local.json
+
+# E2E browser status
+.e2e-status.json
 
 # Local config overrides
 tss.override.json
