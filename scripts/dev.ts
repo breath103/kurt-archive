@@ -1,3 +1,4 @@
+#!/usr/bin/env -S npx tsx
 import { type ChildProcess, spawn } from "node:child_process";
 import { parseArgs } from "node:util";
 
