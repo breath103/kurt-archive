@@ -147,7 +147,7 @@ async function main() {
     process.exit(1);
   }
 
-  await command.run(rest);
+  await command.run(commandName, rest);
 }
 
 void main();
