@@ -1,6 +1,8 @@
 import path from "node:path";
 
 import * as cdk from "aws-cdk-lib";
+import * as events from "aws-cdk-lib/aws-events";
+import * as targets from "aws-cdk-lib/aws-events-targets";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { Construct } from "constructs";
 
@@ -15,6 +17,7 @@ interface BackendStackProps extends cdk.StackProps {
   project: string;
   name: string;
   envVars: Record<string, string>;
+  prewarmLambda?: boolean;
 }
 
 export class BackendStack extends cdk.Stack {
@@ -47,6 +50,15 @@ export class BackendStack extends cdk.Stack {
       authType: lambda.FunctionUrlAuthType.NONE,
       invokeMode: lambda.InvokeMode.RESPONSE_STREAM,
     });
+
+    if (props.prewarmLambda) {
+      new events.Rule(this, "WarmerSchedule", {
+        schedule: events.Schedule.rate(cdk.Duration.minutes(5)),
+        targets: [new targets.LambdaFunction(fn, {
+          event: events.RuleTargetInput.fromObject({ source: "warmer" }),
+        })],
+      });
+    }
 
     new cdk.CfnOutput(this, "FunctionUrl", {
       value: fnUrl.url,
