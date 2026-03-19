@@ -13,6 +13,13 @@ const _handler: StreamHandler = streamHandle(app);
 // so Lambda still recognizes this as a streaming handler.
 export const handler: StreamHandler = Object.assign(
   async (...args: Parameters<StreamHandler>) => {
+    // Cron warmer: return early without processing
+    const event: unknown = args[0];
+    if (typeof event === "object" && event !== null && "source" in event && event.source === "warmer") {
+      console.log("[warmer] ping");
+      return;
+    }
+
     await _handler(...args);
 
     // This runs after the lambda response stream is closed.
