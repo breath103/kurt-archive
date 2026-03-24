@@ -1,4 +1,4 @@
-#!/usr/bin/env -S npx tsx
+#!/usr/bin/env tsx
 import { type Command } from "./command.js";
 import { start, stop } from "./commands/lifecycle.js";
 import { navigate, screenshot, runJs, click, type, wait, setViewport, pageText } from "./commands/browser.js";
