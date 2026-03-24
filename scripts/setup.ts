@@ -1,4 +1,4 @@
-#!/usr/bin/env -S npx tsx
+#!/usr/bin/env tsx
 import * as readline from "readline";
 import fs from "fs";
 import path from "path";

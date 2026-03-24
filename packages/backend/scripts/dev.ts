@@ -1,4 +1,4 @@
-#!/usr/bin/env -S npx tsx --tsconfig scripts/tsconfig.json
+#!/usr/bin/env -S tsx --tsconfig scripts/tsconfig.json
 process.title = "dev:backend:watcher";
 
 import type { ChildProcess } from "node:child_process";

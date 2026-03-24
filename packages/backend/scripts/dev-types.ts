@@ -1,4 +1,4 @@
-#!/usr/bin/env -S npx tsx --tsconfig scripts/tsconfig.json
+#!/usr/bin/env -S tsx --tsconfig scripts/tsconfig.json
 process.title = "dev:types";
 
 import { execSync } from "node:child_process";

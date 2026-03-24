@@ -15,9 +15,7 @@ export class DevProcess {
     this.name = name;
     this.color = options.color;
 
-    // detached: true makes the child its own process group leader.
-    // This lets us kill the entire subtree (npm → tsx → server) with kill(-pid).
-    this.child = spawn(command, args, { stdio: ["ignore", "pipe", "pipe"], detached: true, cwd: options.cwd });
+    this.child = spawn(command, args, { stdio: ["ignore", "pipe", "pipe"], cwd: options.cwd });
 
     this.child.stdout?.on("data", (d: Buffer) => this.pipe(d, process.stdout));
     this.child.stderr?.on("data", (d: Buffer) => { if (!this._killed) this.pipe(d, process.stderr); });
@@ -66,16 +64,8 @@ export class DevProcess {
     });
   }
 
-  kill(): Promise<void> {
+  kill(): void {
     this._killed = true;
-    if (this._exited) return Promise.resolve();
-    return new Promise((resolve) => {
-      this.child.on("exit", () => resolve());
-      // Kill the entire process group (npm → tsx → server) with negative PID
-      if (this.child.pid) {
-        try { process.kill(-this.child.pid, "SIGTERM"); } catch { /* already dead */ }
-      }
-    });
   }
 
   private pipe(data: Buffer, stream: NodeJS.WriteStream) {
