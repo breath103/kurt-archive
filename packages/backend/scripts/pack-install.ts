@@ -1,4 +1,4 @@
-#!/usr/bin/env -S tsx --tsconfig scripts/tsconfig.json
+#!/usr/bin/env tsx
 import { execSync } from "node:child_process";
 import path from "node:path";
 

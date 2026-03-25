@@ -11,11 +11,11 @@ export class DevProcess {
   private _killed = false;
   private _exited = false;
 
-  constructor(name: string, command: string, args: string[], options: { color: string; cwd?: string }) {
+  constructor(name: string, command: string, args: string[], options: { color: string }) {
     this.name = name;
     this.color = options.color;
 
-    this.child = spawn(command, args, { stdio: ["ignore", "pipe", "pipe"], cwd: options.cwd });
+    this.child = spawn(command, args, { stdio: ["ignore", "pipe", "pipe"] });
 
     this.child.stdout?.on("data", (d: Buffer) => this.pipe(d, process.stdout));
     this.child.stderr?.on("data", (d: Buffer) => { if (!this._killed) this.pipe(d, process.stderr); });

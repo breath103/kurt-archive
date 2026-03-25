@@ -5,7 +5,7 @@ import { parseArgs } from "node:util";
 import { merge } from "rxjs";
 import { loadConfig } from "shared/config";
 
-import { DevProcess } from "./dev-process.js";
+import { DevProcess } from "./dev/dev-process.js";
 
 // Detect parent death (e.g. terminal closed without SIGHUP).
 // When parent dies, OS reparents us → ppid changes → kill our process group.
@@ -31,10 +31,10 @@ async function main() {
 
   const envFlag = [`--env=${values.env}`];
 
-  const backend = new DevProcess("Backend", "./scripts/dev.ts", envFlag, { color: "\x1b[34m", cwd: "packages/backend" });
-  const frontend = new DevProcess("Frontend", "./scripts/dev.ts", envFlag, { color: "\x1b[32m", cwd: "packages/frontend" });
-  const edge = new DevProcess("Edge", "./scripts/dev.ts", [], { color: "\x1b[35m", cwd: "packages/edge" });
-  const types = new DevProcess("Types", "./scripts/dev-types.ts", [], { color: "\x1b[33m", cwd: "packages/backend" });
+  const backend = new DevProcess("Backend", "packages/backend/scripts/dev.ts", envFlag, { color: "\x1b[34m" });
+  const frontend = new DevProcess("Frontend", "packages/frontend/scripts/dev.ts", envFlag, { color: "\x1b[32m" });
+  const edge = new DevProcess("Edge", "packages/edge/scripts/dev.ts", [], { color: "\x1b[35m" });
+  const types = new DevProcess("Types", "packages/backend/scripts/dev-types.ts", [], { color: "\x1b[33m" });
 
   const critical = [backend, frontend, edge];
   const all = [backend, frontend, edge, types];

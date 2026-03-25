@@ -151,9 +151,9 @@ async function main() {
 
   console.log("\nNext steps:");
   console.log("  1. Edit packages/backend/.env with your secrets");
-  console.log("  2. cd packages/edge && ./scripts/deploy.ts deploy  # Deploy CloudFront + Lambda@Edge");
-  console.log("  3. cd packages/backend && ./scripts/deploy.ts --name=main");
-  console.log("  4. cd packages/frontend && ./scripts/deploy.ts --name=main");
+  console.log("  2. ./packages/edge/scripts/deploy.ts deploy  # Deploy CloudFront + Lambda@Edge");
+  console.log("  3. ./packages/backend/scripts/deploy.ts --name=main");
+  console.log("  4. ./packages/frontend/scripts/deploy.ts --name=main");
 
   rl.close();
 }

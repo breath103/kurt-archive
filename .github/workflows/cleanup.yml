@@ -32,7 +32,7 @@ jobs:
           aws-region: us-east-1
 
       - name: Destroy backend
-        run: cd packages/backend && ./scripts/destroy.ts --name=${{ github.event.ref }}
+        run: ./packages/backend/scripts/destroy.ts --name=${{ github.event.ref }}
 
       - name: Destroy frontend
-        run: cd packages/frontend && ./scripts/destroy.ts --name=${{ github.event.ref }}
+        run: ./packages/frontend/scripts/destroy.ts --name=${{ github.event.ref }}

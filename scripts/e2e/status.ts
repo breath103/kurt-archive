@@ -29,11 +29,11 @@ export function remove() {
 export function requireRunning(): E2eStatus {
   const s = read();
   if (!s) {
-    console.error("Headless Chrome is not running. Start it first: ./scripts/e2e/index.ts start");
+    console.error("Headless Chrome is not running. Start it first: ./scripts/e2e.ts start");
     process.exit(1);
   }
   try { process.kill(s.pid, 0); } catch {
-    console.error("Headless Chrome process is dead. Restart: ./scripts/e2e/index.ts start");
+    console.error("Headless Chrome process is dead. Restart: ./scripts/e2e.ts start");
     remove();
     process.exit(1);
   }

@@ -46,13 +46,13 @@ Or manually edit `tss.json`:
 
 ```bash
 # Edge (CloudFront + Lambda@Edge) - run once
-cd packages/edge && ./scripts/deploy.ts deploy
+./packages/edge/scripts/deploy.ts deploy
 
 # Backend
-cd packages/backend && ./scripts/deploy.ts --name=main
+./packages/backend/scripts/deploy.ts --name=main
 
 # Frontend
-cd packages/frontend && ./scripts/deploy.ts --name=main
+./packages/frontend/scripts/deploy.ts --name=main
 ```
 
 ### 3. Environment Variables
@@ -82,7 +82,7 @@ DATABASE_URL=postgres://localhost/myapp
 - name: Deploy backend
   env:
     DATABASE_URL: "postgres://prod/myapp"
-  run: cd packages/backend && ./scripts/deploy.ts --name=${{ github.ref_name }}
+  run: ./packages/backend/scripts/deploy.ts --name=${{ github.ref_name }}
 ```
 
 ### 4. Authentication (Google OAuth)
@@ -100,7 +100,7 @@ Set up Google OAuth at [Google Cloud Console](https://console.cloud.google.com/a
 ### 5. Dev
 
 ```bash
-./scripts/dev/index.ts
+./scripts/dev.ts
 ```
 
 Runs edge proxy on `:3000`, backend on `:3001`, frontend on `:3002`.
@@ -112,11 +112,11 @@ The e2e tool manages a headless Chrome instance via Chrome DevTools Protocol for
 ### Quick Start
 
 ```bash
-./scripts/dev/index.ts           # Start dev servers first
-./scripts/e2e/index.ts start     # Start headless Chrome
-./scripts/e2e/index.ts navigate /
-./scripts/e2e/index.ts screenshot
-./scripts/e2e/index.ts stop      # Stop Chrome when done
+./scripts/dev.ts           # Start dev servers first
+./scripts/e2e.ts start     # Start headless Chrome
+./scripts/e2e.ts navigate /
+./scripts/e2e.ts screenshot
+./scripts/e2e.ts stop      # Stop Chrome when done
 ```
 
 ### Commands
@@ -137,12 +137,12 @@ The e2e tool manages a headless Chrome instance via Chrome DevTools Protocol for
 ### Examples
 
 ```bash
-./scripts/e2e/index.ts navigate /api/health
-./scripts/e2e/index.ts click "button.login"
-./scripts/e2e/index.ts type "input[name=email]" "user@example.com"
-./scripts/e2e/index.ts wait "div.dashboard"
-./scripts/e2e/index.ts run-js "document.title"
-./scripts/e2e/index.ts screenshot my-screenshot.png
+./scripts/e2e.ts navigate /api/health
+./scripts/e2e.ts click "button.login"
+./scripts/e2e.ts type "input[name=email]" "user@example.com"
+./scripts/e2e.ts wait "div.dashboard"
+./scripts/e2e.ts run-js "document.title"
+./scripts/e2e.ts screenshot my-screenshot.png
 ```
 
 ## Type-Safe API
@@ -250,14 +250,14 @@ Lambda@Edge reads this at runtime (cached 60s) to route API requests.
 
 Automatic deployment on push:
 - Push to any branch → deploys backend + frontend for that branch
-- Edge must be deployed manually (`cd packages/edge && ./scripts/deploy.ts deploy`)
+- Edge must be deployed manually (`./packages/edge/scripts/deploy.ts deploy`)
 
 ### Setup
 
 1. Run bootstrap to create IAM role for GitHub Actions:
 
 ```bash
-cd packages/edge && ./scripts/deploy.ts deploy
+./packages/edge/scripts/deploy.ts deploy
 ```
 
 This creates an OIDC identity provider and IAM role in AWS. Copy the `RoleArn` from the output.
@@ -269,9 +269,9 @@ This creates an OIDC identity provider and IAM role in AWS. Copy the `RoleArn` f
 
 ```
 ├── tss.json              # Config (schema: tss.schema.json)
-├── scripts/              # Root-level scripts
-│   ├── dev/              # Dev server orchestrator
-│   ├── e2e/              # E2E testing (headless Chrome)
+├── scripts/
+│   ├── dev.ts            # Dev server orchestrator
+│   ├── e2e.ts            # E2E testing (headless Chrome)
 │   ├── lint              # Lint all packages
 │   └── setup.ts          # Interactive project setup
 ├── packages/

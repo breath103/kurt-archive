@@ -1,4 +1,4 @@
-#!/usr/bin/env -S tsx --tsconfig scripts/tsconfig.json
+#!/usr/bin/env tsx
 import { execSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
@@ -80,7 +80,7 @@ function parseCliArgs() {
 
 function showHelp(): never {
   console.log(`
-Usage: ./scripts/deploy.ts <command> [options]
+Usage: ./packages/edge/scripts/deploy.ts <command> [options]
 
 Deploy or destroy the edge stack (CloudFront, Lambda@Edge, S3, Route53)
 
@@ -93,9 +93,9 @@ Options:
   -h, --help          Show this help message
 
 Examples:
-  ./scripts/deploy.ts deploy
-  ./scripts/deploy.ts deploy --dry-run
-  ./scripts/deploy.ts destroy
+  ./packages/edge/scripts/deploy.ts deploy
+  ./packages/edge/scripts/deploy.ts deploy --dry-run
+  ./packages/edge/scripts/deploy.ts destroy
 `);
   process.exit(0);
 }

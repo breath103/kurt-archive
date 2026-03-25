@@ -1,4 +1,4 @@
-#!/usr/bin/env -S tsx --tsconfig scripts/tsconfig.json
+#!/usr/bin/env tsx
 import { parseArgs } from "node:util";
 
 import { sanitizeBranchName } from "shared/branch";
@@ -57,7 +57,7 @@ function parseCliArgs() {
 
 function showHelp(): never {
   console.log(`
-Usage: ./scripts/destroy.ts [options]
+Usage: ./packages/frontend/scripts/destroy.ts [options]
 
 Delete frontend assets from S3
 
@@ -67,8 +67,8 @@ Options:
   -h, --help          Show this help message
 
 Examples:
-  ./scripts/destroy.ts --name=feature-branch
-  ./scripts/destroy.ts -n feature/my-feature
+  ./packages/frontend/scripts/destroy.ts --name=feature-branch
+  ./packages/frontend/scripts/destroy.ts -n feature/my-feature
 `);
   process.exit(0);
 }

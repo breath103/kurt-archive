@@ -1,4 +1,4 @@
-#!/usr/bin/env -S tsx --tsconfig scripts/tsconfig.json
+#!/usr/bin/env tsx
 import { execSync } from "node:child_process";
 import path from "node:path";
 import { parseArgs } from "node:util";
@@ -63,7 +63,7 @@ function parseCliArgs() {
 
 function showHelp(): never {
   console.log(`
-Usage: ./scripts/deploy.ts [options]
+Usage: ./packages/backend/scripts/deploy.ts [options]
 
 Deploy backend to AWS Lambda
 
@@ -76,9 +76,9 @@ Options:
   -h, --help          Show this help message
 
 Examples:
-  ./scripts/deploy.ts --name=main
-  ./scripts/deploy.ts --name=main --env=production
-  ./scripts/deploy.ts -n staging -e staging
+  ./packages/backend/scripts/deploy.ts --name=main
+  ./packages/backend/scripts/deploy.ts --name=main --env=production
+  ./packages/backend/scripts/deploy.ts -n staging -e staging
 `);
   process.exit(0);
 }
