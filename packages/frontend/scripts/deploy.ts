@@ -1,4 +1,4 @@
-#!/usr/bin/env -S tsx --tsconfig scripts/tsconfig.json
+#!/usr/bin/env -S node --import tsx
 import { execSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
@@ -50,7 +50,7 @@ function parseCliArgs() {
 
 function showHelp(): never {
   console.log(`
-Usage: npm run deploy -- [options]
+Usage: ./packages/frontend/scripts/deploy.ts [options]
 
 Deploy frontend to S3
 
@@ -63,9 +63,9 @@ Options:
   -h, --help          Show this help message
 
 Examples:
-  npm run deploy -- --name=main
-  npm run deploy -- --name=main --env=production
-  npm run deploy -- -n staging -e staging
+  ./packages/frontend/scripts/deploy.ts --name=main
+  ./packages/frontend/scripts/deploy.ts --name=main --env=production
+  ./packages/frontend/scripts/deploy.ts -n staging -e staging
 `);
   process.exit(0);
 }

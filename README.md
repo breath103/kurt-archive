@@ -4,7 +4,7 @@ Type-Safe Serverless Stack for deploying full-stack TypeScript apps on AWS.
 
 ## Live Demo
 
-- **Production (main)**: https://www.tsss.cloud/ 
+- **Production (main)**: https://www.tsss.cloud/
 - **Branch preview (branch1)**: https://branch1.tsss.cloud/
 
 ## Why
@@ -23,7 +23,7 @@ If you want a simple web app (no SSR) on your own AWS infrastructure:
 
 ```bash
 npm install
-npm run setup
+./scripts/setup.ts
 ```
 
 Or manually edit `tss.json`:
@@ -46,13 +46,13 @@ Or manually edit `tss.json`:
 
 ```bash
 # Edge (CloudFront + Lambda@Edge) - run once
-npm run deploy -w edge
+./packages/edge/scripts/deploy.ts deploy
 
 # Backend
-npm run deploy -w backend -- --name=main
+./packages/backend/scripts/deploy.ts --name=main
 
 # Frontend
-npm run deploy -w frontend -- --name=main
+./packages/frontend/scripts/deploy.ts --name=main
 ```
 
 ### 3. Environment Variables
@@ -82,7 +82,7 @@ DATABASE_URL=postgres://localhost/myapp
 - name: Deploy backend
   env:
     DATABASE_URL: "postgres://prod/myapp"
-  run: npm run deploy -w backend -- --name=${{ github.ref_name }}
+  run: ./packages/backend/scripts/deploy.ts --name=${{ github.ref_name }}
 ```
 
 ### 4. Authentication (Google OAuth)
@@ -100,10 +100,50 @@ Set up Google OAuth at [Google Cloud Console](https://console.cloud.google.com/a
 ### 5. Dev
 
 ```bash
-npm run dev
+./scripts/dev.ts
 ```
 
 Runs edge proxy on `:3000`, backend on `:3001`, frontend on `:3002`.
+
+## E2E Testing
+
+The e2e tool manages a headless Chrome instance via Chrome DevTools Protocol for browser automation.
+
+### Quick Start
+
+```bash
+./scripts/dev.ts           # Start dev servers first
+./scripts/e2e.ts start     # Start headless Chrome
+./scripts/e2e.ts navigate /
+./scripts/e2e.ts screenshot
+./scripts/e2e.ts stop      # Stop Chrome when done
+```
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `start` | Start headless Chrome |
+| `stop` | Stop headless Chrome |
+| `navigate <path>` | Navigate to URL (relative or absolute) |
+| `screenshot [out-path]` | Take screenshot (default: `.tmp/screenshot-{timestamp}.png`) |
+| `run-js <expression>` | Execute JavaScript in page |
+| `click <selector>` | Click element |
+| `type <selector> <text>` | Type into input field |
+| `wait <selector>` | Wait for element (30s timeout) |
+| `set-viewport <width> <height>` | Set viewport size |
+| `page-text` | Print page body text |
+
+### Examples
+
+```bash
+./scripts/e2e.ts navigate /api/health
+./scripts/e2e.ts click "button.login"
+./scripts/e2e.ts type "input[name=email]" "user@example.com"
+./scripts/e2e.ts wait "div.dashboard"
+./scripts/e2e.ts run-js "document.title"
+./scripts/e2e.ts screenshot my-screenshot.png
+```
 
 ## Type-Safe API
 
@@ -210,14 +250,14 @@ Lambda@Edge reads this at runtime (cached 60s) to route API requests.
 
 Automatic deployment on push:
 - Push to any branch → deploys backend + frontend for that branch
-- Edge must be deployed manually (`npm run deploy:edge`)
+- Edge must be deployed manually (`./packages/edge/scripts/deploy.ts deploy`)
 
 ### Setup
 
 1. Run bootstrap to create IAM role for GitHub Actions:
 
 ```bash
-npm run bootstrap -w edge
+./packages/edge/scripts/deploy.ts deploy
 ```
 
 This creates an OIDC identity provider and IAM role in AWS. Copy the `RoleArn` from the output.
@@ -229,6 +269,11 @@ This creates an OIDC identity provider and IAM role in AWS. Copy the `RoleArn` f
 
 ```
 ├── tss.json              # Config (schema: tss.schema.json)
+├── scripts/
+│   ├── dev.ts            # Dev server orchestrator
+│   ├── e2e.ts            # E2E testing (headless Chrome)
+│   ├── lint              # Lint all packages
+│   └── setup.ts          # Interactive project setup
 ├── packages/
 │   ├── backend/          # Hono API → Lambda
 │   ├── frontend/         # Vite + React → S3

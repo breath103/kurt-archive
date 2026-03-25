@@ -1,4 +1,4 @@
-#!/usr/bin/env -S tsx --tsconfig scripts/tsconfig.json
+#!/usr/bin/env -S node --import tsx
 import { execSync } from "node:child_process";
 import path from "node:path";
 import { parseArgs } from "node:util";
@@ -63,7 +63,7 @@ function parseCliArgs() {
 
 function showHelp(): never {
   console.log(`
-Usage: npm run deploy -- [options]
+Usage: ./packages/backend/scripts/deploy.ts [options]
 
 Deploy backend to AWS Lambda
 
@@ -76,16 +76,16 @@ Options:
   -h, --help          Show this help message
 
 Examples:
-  npm run deploy -- --name=main
-  npm run deploy -- --name=main --env=production
-  npm run deploy -- -n staging -e staging
+  ./packages/backend/scripts/deploy.ts --name=main
+  ./packages/backend/scripts/deploy.ts --name=main --env=production
+  ./packages/backend/scripts/deploy.ts -n staging -e staging
 `);
   process.exit(0);
 }
 
 function build(): void {
   console.log("Building...");
-  execSync("npm run build", { stdio: "inherit", cwd: ROOT });
+  execSync("./scripts/build.ts", { stdio: "inherit", cwd: ROOT });
 }
 
 function synthesizeStack(

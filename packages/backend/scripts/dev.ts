@@ -1,4 +1,4 @@
-#!/usr/bin/env -S tsx --tsconfig scripts/tsconfig.json
+#!/usr/bin/env -S node --import tsx
 process.title = "dev:backend:watcher";
 
 import type { ChildProcess } from "node:child_process";
@@ -29,7 +29,7 @@ const watch$ = (p: string, opts?: { recursive?: boolean }) =>
 let server: ChildProcess | null = null;
 
 const startServer = () => {
-  server = spawn("tsx", ["scripts/server.ts"], {
+  server = spawn("npx", ["tsx", "scripts/server.ts"], {
     cwd: ROOT,
     stdio: "inherit",
   });

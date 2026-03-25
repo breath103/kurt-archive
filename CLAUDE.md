@@ -1,50 +1,55 @@
 # Project Instructions
 
+## Deployment
+
+- **CI deploys automatically on merge to main.** Never deploy manually.
+- **Never use `--squash` when merging PRs.** Use `gh pr merge` without `--squash`.
+
 See `documents/coding-guidelines/` for coding standards:
 - `backend.md` - Backend (packages/backend)
 - `frontend.md` - Frontend (packages/frontend)
 
-## npm Workspace Commands
+## Running Scripts
 
-This monorepo uses npm workspaces. Commands can be run from the root directory.
+All scripts are executable via shebang — no `npm run` needed. Run everything from repo root.
 
-### Root-level scripts (run from root)
+### Root-level scripts
 
 ```bash
-npm run dev   # Start all dev servers (frontend, backend, edge proxy)
-npm run lint  # Run linters across packages
+./scripts/dev.ts                # Start all dev servers (frontend, backend, edge proxy)
+./scripts/lint                  # Run linters across packages
+./scripts/e2e.ts start          # Start headless Chrome for e2e
+./scripts/setup.ts              # Interactive project setup
 ```
 
-### Running scripts in specific packages
-
-Use `-w <package>` to target a specific workspace:
+### Package scripts
 
 ```bash
-npm run <script> -w <package>
+# Backend
+./packages/backend/scripts/deploy.ts --name=main
+./packages/backend/scripts/build.ts
+./packages/backend/scripts/logs.ts -n main -t
+
+# Frontend
+./packages/frontend/scripts/deploy.ts --name=main
+./packages/frontend/scripts/destroy.ts --name=feature-branch
+
+# Edge
+./packages/edge/scripts/deploy.ts deploy
+./packages/edge/scripts/logs.ts -f origin-request -r us-east-1
 ```
 
-Available packages:
-- `backend` - Backend API (Hono on Lambda)
-- `frontend` - Frontend (React/Vite)
-- `edge` - Edge proxy (CloudFront/Lambda@Edge)
-- `shared` - Shared utilities and types
-
-### Examples
+### Other common commands (run from package directory)
 
 ```bash
-# Run backend dev server only
-npm run dev -w backend
+cd packages/backend && npx eslint src scripts          # Lint
+cd packages/backend && npx eslint src scripts --fix     # Lint with auto-fix
+cd packages/backend && npx tsc --noEmit                 # Type check
+```
 
-# Run frontend dev server only
-npm run dev -w frontend
+### Install packages
 
-# Deploy backend with arguments
-npm run deploy -w backend -- --hotswap
-
-# Run tests in shared package
-npm test -w shared
-
-# Install a package to a specific workspace
+```bash
 npm install <package> -w backend
 npm install -D <package> -w frontend  # as devDependency
 ```

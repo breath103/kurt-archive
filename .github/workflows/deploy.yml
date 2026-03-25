@@ -18,9 +18,9 @@ jobs:
       matrix:
         include:
           - name: Build & Lint & Test backend
-            command: (npm run build:types -w backend) && (npm run lint -w backend) && (npm test -w backend)
+            command: ./packages/backend/scripts/build-types.ts && cd packages/backend && npx eslint src scripts && npx tsx --test src/**/__tests__/**/*.test.ts
           - name: Build & Lint & Test frontend
-            command: (npm run build:types -w backend) && (npm run build:types -w frontend) && (npm run lint -w frontend) && (npm test -w frontend)
+            command: ./packages/backend/scripts/build-types.ts && ./packages/frontend/scripts/build-types.ts && cd packages/frontend && npx eslint src scripts && ../../scripts/with-env.sh --env=test npx vitest run
     name: ${{ matrix.name }}
     steps:
       - uses: actions/checkout@v4
@@ -64,14 +64,14 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: us-east-1
 
-      - run: npm run pack:build -w backend
+      - run: ./packages/backend/scripts/pack-build.ts
       - uses: actions/cache@v4
         id: deploy-deps
         with:
           path: packages/backend/dist/node_modules
           key: backend-deploy-deps-${{ hashFiles('packages/backend/package.json') }}
       - if: steps.deploy-deps.outputs.cache-hit != 'true'
-        run: npm run pack:install -w backend
+        run: ./packages/backend/scripts/pack-install.ts
       - name: Deploy backend
         env:
           # packages/backend/src/env.d.ts
@@ -80,14 +80,14 @@ jobs:
           GOOGLE_CLIENT_ID: "495965151122-nqsuprf3r5e9r8soqa5p15ini6sijhe0.apps.googleusercontent.com"
           GOOGLE_CLIENT_SECRET: "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"
           BETTER_AUTH_SECRET: "RHY2DJS7bHHqwc6/+gSYx5pfx+lwt+epje+7bxjIWuY="
-        run: npm run deploy -w backend -- --name=${{ github.ref_name }}
+        run: ./packages/backend/scripts/deploy.ts --name=${{ github.ref_name }}
 
       - name: Deploy frontend
         env:
           # packages/frontend/src/env.d.ts
           REQUIRED_FOO: "frontend-value"
           # OPTIONAL_FOO: ""
-        run: npm run deploy -w frontend -- --name=${{ github.ref_name }}
+        run: ./packages/frontend/scripts/deploy.ts --name=${{ github.ref_name }}
 
   # notify:
   #   needs: [check, deploy]

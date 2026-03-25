@@ -1,12 +1,12 @@
-#!/usr/bin/env -S tsx --tsconfig scripts/tsconfig.json
+#!/usr/bin/env -S node --import tsx
 import { execSync } from "node:child_process";
 import path from "node:path";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 
 function main() {
-  execSync("npm run pack:build", { cwd: ROOT, stdio: "inherit" });
-  execSync("npm run pack:install", { cwd: ROOT, stdio: "inherit" });
+  execSync("./scripts/pack-build.ts", { cwd: ROOT, stdio: "inherit" });
+  execSync("./scripts/pack-install.ts", { cwd: ROOT, stdio: "inherit" });
   console.log("Build complete");
 }
 

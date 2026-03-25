@@ -1,4 +1,4 @@
-#!/usr/bin/env tsx
+#!/usr/bin/env -S node --import tsx
 import { execSync } from "node:child_process";
 import { parseArgs } from "node:util";
 

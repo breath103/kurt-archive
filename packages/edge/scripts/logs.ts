@@ -1,3 +1,4 @@
+#!/usr/bin/env -S node --import tsx
 import { parseArgs } from "node:util";
 
 import { askConfirmation, parseDuration, sleep } from "shared/cli-utils";
@@ -56,7 +57,7 @@ function parseCliArgs(): CliArgs {
 
   if (values.help) {
     console.log(`
-Usage: npm run logs -- [options]
+Usage: ./packages/edge/scripts/logs.ts [options]
 
 Fetch or tail CloudWatch logs for edge functions
 
@@ -71,10 +72,10 @@ Options:
   -h, --help              Show this help message
 
 Examples:
-  npm run logs -- -f origin-request -r us-east-1
-  npm run logs -- -f origin-request -r us-west-2 -s 30m -t
-  npm run logs -- -f viewer-request                       # always us-east-1
-  npm run logs -- -f viewer-request -s 10m -t
+  ./packages/edge/scripts/logs.ts -f origin-request -r us-east-1
+  ./packages/edge/scripts/logs.ts -f origin-request -r us-west-2 -s 30m -t
+  ./packages/edge/scripts/logs.ts -f viewer-request                       # always us-east-1
+  ./packages/edge/scripts/logs.ts -f viewer-request -s 10m -t
 `);
     process.exit(0);
   }

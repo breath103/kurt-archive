@@ -1,7 +1,7 @@
-#!/usr/bin/env tsx
-import { type Command } from "./command.js";
-import { start, stop } from "./commands/lifecycle.js";
-import { navigate, screenshot, runJs, click, type, wait, setViewport, pageText } from "./commands/browser.js";
+#!/usr/bin/env -S node --import tsx
+import { type Command } from "./e2e/command.js";
+import { start, stop } from "./e2e/commands/lifecycle.js";
+import { navigate, screenshot, runJs, click, type, wait, setViewport, pageText } from "./e2e/commands/browser.js";
 
 // --- Commands ---
 
@@ -27,7 +27,7 @@ async function main() {
     const lines = Object.entries(commands).map(([name, cmd]) =>
       `  ${(name + cmd.usage).padEnd(30)} ${cmd.description}`
     );
-    console.log(`\nUsage: npm run e2e <command> [args]\n\nCommands:\n${lines.join("\n")}\n`);
+    console.log(`\nUsage: ./scripts/e2e.ts <command> [args]\n\nCommands:\n${lines.join("\n")}\n`);
     return;
   }
 

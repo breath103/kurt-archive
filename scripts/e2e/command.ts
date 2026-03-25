@@ -20,7 +20,7 @@ export class Command<T extends z.ZodTuple = z.ZodTuple> {
   async run(name: string, rawArgs: string[]): Promise<void> {
     const parsed = this.args.safeParse(rawArgs);
     if (!parsed.success) {
-      console.error(`Usage: npm run e2e ${name}${this.usage}`);
+      console.error(`Usage: ./scripts/e2e.ts ${name}${this.usage}`);
       process.exit(1);
     }
     await this.handler(...(parsed.data as z.infer<T>));

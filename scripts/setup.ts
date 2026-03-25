@@ -1,4 +1,4 @@
-#!/usr/bin/env tsx
+#!/usr/bin/env -S node --import tsx
 import * as readline from "readline";
 import fs from "fs";
 import path from "path";
@@ -151,10 +151,9 @@ async function main() {
 
   console.log("\nNext steps:");
   console.log("  1. Edit packages/backend/.env with your secrets");
-  console.log("  2. npm run bootstrap -w edge  # Set up GitHub Actions");
-  console.log("  3. npm run deploy -w edge  # Deploy CloudFront + Lambda@Edge");
-  console.log("  4. npm run deploy -w backend -- --name=main");
-  console.log("  5. npm run deploy -w frontend -- --name=main");
+  console.log("  2. ./packages/edge/scripts/deploy.ts deploy  # Deploy CloudFront + Lambda@Edge");
+  console.log("  3. ./packages/backend/scripts/deploy.ts --name=main");
+  console.log("  4. ./packages/frontend/scripts/deploy.ts --name=main");
 
   rl.close();
 }

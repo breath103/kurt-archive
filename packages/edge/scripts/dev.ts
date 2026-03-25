@@ -1,4 +1,4 @@
-#!/usr/bin/env -S tsx --tsconfig scripts/tsconfig.json
+#!/usr/bin/env -S node --import tsx
 process.title = "dev:edge";
 
 import http from "node:http";

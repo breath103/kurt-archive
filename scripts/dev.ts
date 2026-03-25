@@ -1,14 +1,12 @@
-#!/usr/bin/env tsx
+#!/usr/bin/env -S node --import tsx
 import { spawn } from "node:child_process";
 import { parseArgs } from "node:util";
 
-import { merge } from "rxjs";
 import { loadConfig } from "shared/config";
 
-import { DevProcess } from "./dev-process.js";
+import { DevProcess } from "./dev/dev-process.js";
 
 // Detect parent death (e.g. terminal closed without SIGHUP).
-// When parent dies, OS reparents us → ppid changes → kill our process group.
 const parentPid = process.ppid;
 setInterval(() => {
   if (process.ppid !== parentPid) {
@@ -16,6 +14,14 @@ setInterval(() => {
     process.exit(1);
   }
 }, 500);
+
+// Watchdog: separate process that polls our PID. If we die (even SIGKILL),
+// the watchdog kills the entire process group. Handles the untrappable case.
+spawn("node", ["-e", `
+  setInterval(() => {
+    try { process.kill(${process.pid}, 0); } catch { process.kill(0, "SIGTERM"); process.exit(); }
+  }, 500);
+`], { stdio: "ignore" });
 
 async function main() {
   process.title = "dev:main";
@@ -31,14 +37,6 @@ async function main() {
 
   const envFlag = [`--env=${values.env}`];
 
-  const backend = new DevProcess("Backend", "./scripts/dev.ts", envFlag, { color: "\x1b[34m", cwd: "packages/backend" });
-  const frontend = new DevProcess("Frontend", "./scripts/dev.ts", envFlag, { color: "\x1b[32m", cwd: "packages/frontend" });
-  const edge = new DevProcess("Edge", "./scripts/dev.ts", [], { color: "\x1b[35m", cwd: "packages/edge" });
-  const types = new DevProcess("Types", "./scripts/dev-types.ts", [], { color: "\x1b[33m", cwd: "packages/backend" });
-
-  const critical = [backend, frontend, edge];
-  const all = [backend, frontend, edge, types];
-
   const shutdown = () => {
     console.log("\x1b[33mShutting down...\x1b[0m");
     for (const p of all) p.kill();
@@ -46,15 +44,16 @@ async function main() {
     process.exit(1);
   };
 
-  // Any critical process crash → shutdown everything
-  merge(...critical.map((p) => p.$crashed)).subscribe(() => shutdown());
+  const backend = new DevProcess("Backend", "packages/backend/scripts/dev.ts", envFlag, { color: "\x1b[34m", onCrash: shutdown });
+  const frontend = new DevProcess("Frontend", "packages/frontend/scripts/dev.ts", envFlag, { color: "\x1b[32m", onCrash: shutdown });
+  const edge = new DevProcess("Edge", "packages/edge/scripts/dev.ts", [], { color: "\x1b[35m", onCrash: shutdown });
+  const types = new DevProcess("Types", "packages/backend/scripts/dev-types.ts", [], { color: "\x1b[33m" });
 
-  // Manual termination signals → shutdown everything
+  const all = [backend, frontend, edge, types];
+
   for (const sig of ["SIGINT", "SIGTERM", "SIGTSTP"] as const) {
-    process.on(sig, () => shutdown());
+    process.on(sig, shutdown);
   }
-
-  // --- Now await readiness ---
 
   try {
     await Promise.all([

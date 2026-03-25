@@ -1,4 +1,4 @@
-#!/usr/bin/env -S tsx --tsconfig scripts/tsconfig.json
+#!/usr/bin/env -S node --import tsx
 import { parseArgs } from "node:util";
 
 import { sanitizeBranchName } from "shared/branch";
@@ -66,7 +66,7 @@ function parseCliArgs() {
 
 function showHelp(): never {
   console.log(`
-Usage: npm run destroy -- [options]
+Usage: ./packages/backend/scripts/destroy.ts [options]
 
 Destroy backend stack from AWS
 
@@ -76,8 +76,8 @@ Options:
   -h, --help          Show this help message
 
 Examples:
-  npm run destroy -- --name=feature-branch
-  npm run destroy -- -n feature/my-feature
+  ./packages/backend/scripts/destroy.ts --name=feature-branch
+  ./packages/backend/scripts/destroy.ts -n feature/my-feature
 `);
   process.exit(0);
 }
