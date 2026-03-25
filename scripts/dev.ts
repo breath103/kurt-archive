@@ -7,7 +7,6 @@ import { loadConfig } from "shared/config";
 import { DevProcess } from "./dev/dev-process.js";
 
 // Detect parent death (e.g. terminal closed without SIGHUP).
-// When parent dies, OS reparents us → ppid changes → kill our process group.
 const parentPid = process.ppid;
 setInterval(() => {
   if (process.ppid !== parentPid) {
@@ -15,6 +14,14 @@ setInterval(() => {
     process.exit(1);
   }
 }, 500);
+
+// Watchdog: separate process that polls our PID. If we die (even SIGKILL),
+// the watchdog kills the entire process group. Handles the untrappable case.
+spawn("node", ["-e", `
+  setInterval(() => {
+    try { process.kill(${process.pid}, 0); } catch { process.kill(0, "SIGTERM"); process.exit(); }
+  }, 500);
+`], { stdio: "ignore" });
 
 async function main() {
   process.title = "dev:main";
