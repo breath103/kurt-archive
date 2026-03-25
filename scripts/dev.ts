@@ -2,7 +2,6 @@
 import { spawn } from "node:child_process";
 import { parseArgs } from "node:util";
 
-import { merge } from "rxjs";
 import { loadConfig } from "shared/config";
 
 import { DevProcess } from "./dev/dev-process.js";
@@ -31,14 +30,6 @@ async function main() {
 
   const envFlag = [`--env=${values.env}`];
 
-  const backend = new DevProcess("Backend", "packages/backend/scripts/dev.ts", envFlag, { color: "\x1b[34m" });
-  const frontend = new DevProcess("Frontend", "packages/frontend/scripts/dev.ts", envFlag, { color: "\x1b[32m" });
-  const edge = new DevProcess("Edge", "packages/edge/scripts/dev.ts", [], { color: "\x1b[35m" });
-  const types = new DevProcess("Types", "packages/backend/scripts/dev-types.ts", [], { color: "\x1b[33m" });
-
-  const critical = [backend, frontend, edge];
-  const all = [backend, frontend, edge, types];
-
   const shutdown = () => {
     console.log("\x1b[33mShutting down...\x1b[0m");
     for (const p of all) p.kill();
@@ -46,15 +37,16 @@ async function main() {
     process.exit(1);
   };
 
-  // Any critical process crash → shutdown everything
-  merge(...critical.map((p) => p.$crashed)).subscribe(() => shutdown());
+  const backend = new DevProcess("Backend", "packages/backend/scripts/dev.ts", envFlag, { color: "\x1b[34m", onCrash: shutdown });
+  const frontend = new DevProcess("Frontend", "packages/frontend/scripts/dev.ts", envFlag, { color: "\x1b[32m", onCrash: shutdown });
+  const edge = new DevProcess("Edge", "packages/edge/scripts/dev.ts", [], { color: "\x1b[35m", onCrash: shutdown });
+  const types = new DevProcess("Types", "packages/backend/scripts/dev-types.ts", [], { color: "\x1b[33m" });
 
-  // Manual termination signals → shutdown everything
+  const all = [backend, frontend, edge, types];
+
   for (const sig of ["SIGINT", "SIGTERM", "SIGTSTP"] as const) {
-    process.on(sig, () => shutdown());
+    process.on(sig, shutdown);
   }
-
-  // --- Now await readiness ---
 
   try {
     await Promise.all([

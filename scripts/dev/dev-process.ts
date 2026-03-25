@@ -1,17 +1,12 @@
 import { type ChildProcess as NodeChildProcess, spawn } from "node:child_process";
 
-import { ReplaySubject } from "rxjs";
-
 export class DevProcess {
   readonly name: string;
-  readonly $crashed = new ReplaySubject<void>(1);
-
   private readonly child: NodeChildProcess;
   private readonly color: string;
   private _killed = false;
-  private _exited = false;
 
-  constructor(name: string, command: string, args: string[], options: { color: string }) {
+  constructor(name: string, command: string, args: string[], options: { color: string; onCrash?: () => void }) {
     this.name = name;
     this.color = options.color;
 
@@ -21,22 +16,14 @@ export class DevProcess {
     this.child.stderr?.on("data", (d: Buffer) => { if (!this._killed) this.pipe(d, process.stderr); });
 
     this.child.on("exit", (code, signal) => {
-      this._exited = true;
       if (!this._killed) {
         console.log(`\x1b[31m[${this.name}] crashed (code=${code}, signal=${signal})\x1b[0m`);
-        this.$crashed.next();
-        this.$crashed.complete();
+        options.onCrash?.();
       }
     });
   }
 
-  get pid(): number | undefined {
-    return this.child.pid;
-  }
-
   waitForStdout(opts: { pattern: string; timeout: number }): Promise<void> {
-    if (this._exited) return Promise.reject(new Error(`[${this.name}] already exited`));
-
     return new Promise((resolve, reject) => {
       let settled = false;
       const settle = (fn: () => void) => {
