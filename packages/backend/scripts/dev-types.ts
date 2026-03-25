@@ -2,5 +2,7 @@
 process.title = "dev:types";
 
 import { execSync } from "node:child_process";
+import path from "node:path";
 
-execSync("npx tsc --watch --preserveWatchOutput --emitDeclarationOnly", { stdio: "inherit" });
+const ROOT = path.resolve(import.meta.dirname, "..");
+execSync("npx tsc --watch --preserveWatchOutput --emitDeclarationOnly", { stdio: "inherit", cwd: ROOT });
