@@ -1,4 +1,4 @@
-#!/usr/bin/env tsx
+#!/usr/bin/env -S node --import tsx
 import * as readline from "readline";
 import fs from "fs";
 import path from "path";

@@ -1,4 +1,4 @@
-#!/usr/bin/env tsx
+#!/usr/bin/env -S node --import tsx
 process.title = "dev:backend:watcher";
 
 import type { ChildProcess } from "node:child_process";

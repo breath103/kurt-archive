@@ -1,4 +1,4 @@
-#!/usr/bin/env tsx
+#!/usr/bin/env -S node --import tsx
 import { type Command } from "./e2e/command.js";
 import { start, stop } from "./e2e/commands/lifecycle.js";
 import { navigate, screenshot, runJs, click, type, wait, setViewport, pageText } from "./e2e/commands/browser.js";
