@@ -27,7 +27,7 @@ async function main() {
     const lines = Object.entries(commands).map(([name, cmd]) =>
       `  ${(name + cmd.usage).padEnd(30)} ${cmd.description}`
     );
-    console.log(`\nUsage: npm run e2e <command> [args]\n\nCommands:\n${lines.join("\n")}\n`);
+    console.log(`\nUsage: ./scripts/e2e/index.ts <command> [args]\n\nCommands:\n${lines.join("\n")}\n`);
     return;
   }
 

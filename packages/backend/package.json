@@ -3,20 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "scripts": {
-    "dev": "./scripts/dev.ts",
-    "build": "./scripts/build.ts",
-    "pack:build": "./scripts/pack-build.ts",
-    "pack:install": "./scripts/pack-install.ts",
-    "deploy": "./scripts/deploy.ts",
-    "destroy": "./scripts/destroy.ts",
-    "logs": "./scripts/logs.ts",
-    "build:types": "./scripts/build-types.ts",
-    "dev:types": "./scripts/dev-types.ts",
-    "type-check": "tsc --noEmit",
-    "lint": "eslint src scripts",
-    "test": "tsx --test src/**/__tests__/**/*.test.ts"
-  },
   "dependencies": {
     "@hono/node-server": "^1.13.0",
     "better-auth": "1.4.18",

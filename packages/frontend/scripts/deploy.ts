@@ -50,7 +50,7 @@ function parseCliArgs() {
 
 function showHelp(): never {
   console.log(`
-Usage: npm run deploy -- [options]
+Usage: ./scripts/deploy.ts [options]
 
 Deploy frontend to S3
 
@@ -63,9 +63,9 @@ Options:
   -h, --help          Show this help message
 
 Examples:
-  npm run deploy -- --name=main
-  npm run deploy -- --name=main --env=production
-  npm run deploy -- -n staging -e staging
+  ./scripts/deploy.ts --name=main
+  ./scripts/deploy.ts --name=main --env=production
+  ./scripts/deploy.ts -n staging -e staging
 `);
   process.exit(0);
 }

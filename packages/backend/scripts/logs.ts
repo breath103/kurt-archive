@@ -41,7 +41,7 @@ function parseCliArgs(): CliArgs {
 
   if (values.help) {
     console.log(`
-Usage: npm run logs -- [options]
+Usage: ./scripts/logs.ts [options]
 
 Fetch or tail CloudWatch logs for backend Lambda
 
@@ -54,10 +54,10 @@ Options:
   -h, --help              Show this help message
 
 Examples:
-  npm run logs -- -n main                  # Last 1 minute, exit
-  npm run logs -- -n main -t               # Last 1 minute, keep tailing
-  npm run logs -- -n main -s 30m           # Last 30 minutes, exit
-  npm run logs -- -n main -s 1d -t         # Last 1 day, keep tailing
+  ./scripts/logs.ts -n main                  # Last 1 minute, exit
+  ./scripts/logs.ts -n main -t               # Last 1 minute, keep tailing
+  ./scripts/logs.ts -n main -s 30m           # Last 30 minutes, exit
+  ./scripts/logs.ts -n main -s 1d -t         # Last 1 day, keep tailing
 `);
     process.exit(0);
   }

@@ -5,11 +5,6 @@
     "packages/*"
   ],
   "scripts": {
-    "setup": "./scripts/setup.ts",
-    "dev": "./scripts/dev/index.ts",
-    "e2e": "./scripts/e2e/index.ts",
-    "lint": "sh -c 'concurrently \"npm run lint -w backend -- $*\" \"npm run lint -w frontend -- $*\"' --",
-    "build:types": "./packages/backend/scripts/build-types.ts && ./packages/frontend/scripts/build-types.ts",
     "prepare": "husky"
   },
   "devDependencies": {

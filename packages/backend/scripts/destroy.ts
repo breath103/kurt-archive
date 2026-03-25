@@ -66,7 +66,7 @@ function parseCliArgs() {
 
 function showHelp(): never {
   console.log(`
-Usage: npm run destroy -- [options]
+Usage: ./scripts/destroy.ts [options]
 
 Destroy backend stack from AWS
 
@@ -76,8 +76,8 @@ Options:
   -h, --help          Show this help message
 
 Examples:
-  npm run destroy -- --name=feature-branch
-  npm run destroy -- -n feature/my-feature
+  ./scripts/destroy.ts --name=feature-branch
+  ./scripts/destroy.ts -n feature/my-feature
 `);
   process.exit(0);
 }

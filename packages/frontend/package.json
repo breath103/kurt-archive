@@ -3,16 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "scripts": {
-    "dev": "./scripts/dev.ts",
-    "deploy": "./scripts/deploy.ts",
-    "destroy": "./scripts/destroy.ts",
-    "build:types": "./scripts/build-types.ts",
-    "type-check": "tsc --noEmit",
-    "lint": "eslint src scripts",
-    "test": "../../scripts/with-env.sh --env=test vitest run",
-    "test:watch": "../../scripts/with-env.sh --env=test vitest"
-  },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-router": "^1.157.16",

@@ -1,3 +1,4 @@
+#!/usr/bin/env -S tsx --tsconfig scripts/tsconfig.json
 import { execSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
@@ -79,7 +80,7 @@ function parseCliArgs() {
 
 function showHelp(): never {
   console.log(`
-Usage: npm run deploy -- <command> [options]
+Usage: ./scripts/deploy.ts <command> [options]
 
 Deploy or destroy the edge stack (CloudFront, Lambda@Edge, S3, Route53)
 
@@ -92,9 +93,9 @@ Options:
   -h, --help          Show this help message
 
 Examples:
-  npm run deploy -- deploy
-  npm run deploy -- deploy --dry-run
-  npm run deploy -- destroy
+  ./scripts/deploy.ts deploy
+  ./scripts/deploy.ts deploy --dry-run
+  ./scripts/deploy.ts destroy
 `);
   process.exit(0);
 }
