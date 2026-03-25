@@ -29,7 +29,7 @@ const watch$ = (p: string, opts?: { recursive?: boolean }) =>
 let server: ChildProcess | null = null;
 
 const startServer = () => {
-  server = spawn("tsx", ["scripts/server.ts"], {
+  server = spawn("npx", ["tsx", "scripts/server.ts"], {
     cwd: ROOT,
     stdio: "inherit",
   });
