@@ -10,9 +10,6 @@ concurrency:
   group: deploy-${{ github.ref }}
   cancel-in-progress: false
 
-env:
-  PATH: ./node_modules/.bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -38,6 +35,7 @@ jobs:
           key: node-modules-${{ hashFiles('package-lock.json') }}
       - if: steps.nm-cache.outputs.cache-hit != 'true'
         run: npm ci
+      - run: echo "$PWD/node_modules/.bin" >> $GITHUB_PATH
       - run: ${{ matrix.command }}
 
   deploy:
@@ -60,6 +58,7 @@ jobs:
           key: node-modules-${{ hashFiles('package-lock.json') }}
       - if: steps.nm-cache.outputs.cache-hit != 'true'
         run: npm ci
+      - run: echo "$PWD/node_modules/.bin" >> $GITHUB_PATH
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4

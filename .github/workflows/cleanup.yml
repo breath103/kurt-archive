@@ -6,9 +6,6 @@ concurrency:
   group: deploy-refs/heads/${{ github.event.ref }}
   cancel-in-progress: false
 
-env:
-  PATH: ./node_modules/.bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-
 jobs:
   cleanup:
     # Only run when a branch is deleted (not tags)
@@ -27,6 +24,7 @@ jobs:
           cache: "npm"
 
       - run: npm ci
+      - run: echo "$PWD/node_modules/.bin" >> $GITHUB_PATH
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
