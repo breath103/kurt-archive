@@ -96,5 +96,5 @@ try {
 ## Run ESLint with --fix
 
 ```bash
-cd packages/backend && eslint src scripts --fix
+./packages/backend/scripts/lint.ts --fix
 ```

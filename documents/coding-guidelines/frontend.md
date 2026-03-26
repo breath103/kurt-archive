@@ -58,5 +58,5 @@ This does NOT apply to runtime code (`src/`) which runs in the browser and canno
 ## Run ESLint with --fix
 
 ```bash
-cd packages/frontend && eslint src scripts --fix
+./packages/frontend/scripts/lint.ts --fix
 ```
