@@ -39,12 +39,14 @@ All scripts are executable via shebang — no `npm run` needed. Run everything f
 ./packages/edge/scripts/logs.ts -f origin-request -r us-east-1
 ```
 
-### Other common commands (run from package directory)
+### Other common commands
 
 ```bash
-cd packages/backend && npx eslint src scripts          # Lint
-cd packages/backend && npx eslint src scripts --fix     # Lint with auto-fix
-cd packages/backend && npx tsc --noEmit                 # Type check
+./packages/backend/scripts/lint.ts                     # Lint backend
+./packages/backend/scripts/lint.ts --fix               # Lint backend with auto-fix
+./packages/frontend/scripts/lint.ts                    # Lint frontend
+./packages/frontend/scripts/lint.ts --fix              # Lint frontend with auto-fix
+cd packages/backend && npx tsc --noEmit                # Type check
 ```
 
 ### Install packages

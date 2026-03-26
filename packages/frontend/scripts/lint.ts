@@ -4,9 +4,8 @@ import path from "node:path";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const args = process.argv.slice(2).join(" ");
-const concurrently = path.join(ROOT, "node_modules/.bin/concurrently");
 
-execSync(`${concurrently} "./packages/backend/scripts/lint.ts ${args}" "./packages/frontend/scripts/lint.ts ${args}"`, {
+execSync(`npx eslint src scripts ${args}`, {
   stdio: "inherit",
   cwd: ROOT,
 });
