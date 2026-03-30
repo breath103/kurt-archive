@@ -17,6 +17,10 @@ export const handler: StreamHandler = Object.assign(
     const event: unknown = args[0];
     if (typeof event === "object" && event !== null && "source" in event && event.source === "warmer") {
       console.log("[warmer] ping");
+      // In streaming Lambda, args are (event, responseStream, context).
+      // The responseStream must be closed or the invocation hangs until timeout.
+      const responseStream = args[1] as unknown as import("stream").Writable;
+      responseStream.end();
       return;
     }
 
