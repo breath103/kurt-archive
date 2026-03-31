@@ -159,8 +159,8 @@ export class PlainDisplacementNode extends ReactiveNode<PlainDisplacementNodeInp
 
   protected process(context: ReactiveNodeContext, { baseMap, textureRepeat, plainSize, rakes }: PlainDisplacementNodeInputs): PlainDisplacementNodeOutput {
     this.material.uniforms.baseDisplacement.value = baseMap;
-    this.material.uniforms.textureRepeat.value.set(textureRepeat.x, textureRepeat.y); // eslint-disable-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    this.material.uniforms.plainSize.value.set(plainSize.x, plainSize.y); // eslint-disable-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    (this.material.uniforms.textureRepeat as THREE.IUniform<THREE.Vector2>).value.set(textureRepeat.x, textureRepeat.y);
+    (this.material.uniforms.plainSize as THREE.IUniform<THREE.Vector2>).value.set(plainSize.x, plainSize.y);
 
     this.strokeDataArray.fill(0);
     this.circleCentersArray.fill(0);

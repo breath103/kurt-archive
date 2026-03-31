@@ -30,7 +30,8 @@ export function buildGraph(
     return info;
   }
 
-  function traverse(node: ReactiveNode<Record<string, unknown>, unknown>): NodeInfo {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function traverse(node: ReactiveNode<any, any>): NodeInfo {
     if (visited.has(node)) return visited.get(node)!;
 
     const info: NodeInfo = {
@@ -43,7 +44,7 @@ export function buildGraph(
 
     Array.from(node.debugInputs.entries()).forEach(([inputName, inputObs]) => {
       if (inputObs instanceof ReactiveNode) {
-        info.inputs.set(inputName, traverse(inputObs)); // eslint-disable-line @typescript-eslint/no-unsafe-argument
+        info.inputs.set(inputName, traverse(inputObs));
       } else if (inputObs instanceof ValueNode) {
         info.inputs.set(inputName, traverseValueNode(inputObs));
       } else {
