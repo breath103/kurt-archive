@@ -1,6 +1,6 @@
-import { twMerge } from "tailwind-merge";
-
 import { createRoute, Link } from "@tanstack/react-router";
+
+import { cn } from "@/lib/cn";
 
 import { rootRoute } from "./__root";
 
@@ -15,7 +15,7 @@ function Home() {
     <>
       <nav className="bg-slate-50/5">
         <div
-          className={twMerge(
+          className={cn(
             "relative w-full",
             "max-w-lg p-4",
             "lg:max-w-5xl lg:px-0",
@@ -40,7 +40,7 @@ function Home() {
 function AboutSection() {
   return (
     <section
-      className={twMerge(
+      className={cn(
         "relative w-full",
         "max-w-lg px-4",
         "lg:max-w-5xl lg:px-0"
@@ -155,7 +155,7 @@ function PresentationSection() {
 
   return (
     <section
-      className={twMerge(
+      className={cn(
         "relative w-full",
         "max-w-lg px-4",
         "lg:max-w-5xl lg:px-0"
@@ -163,7 +163,7 @@ function PresentationSection() {
     >
       <h1 className="pt-4 pb-6 text-3xl font-semibold">Presentations</h1>
       <div
-        className={twMerge(
+        className={cn(
           "grid",
           "grid-cols-1 gap-5",
           "lg:grid-cols-3 lg:gap-3"
@@ -179,7 +179,7 @@ function PresentationSection() {
                   loading="lazy"
                   src={`https://img.youtube.com/vi/${presentation.videoId}/0.jpg`}
                   alt={presentation.title}
-                  className="size-full rounded-md object-cover transition-all hover:translate-y-[-2px] hover:shadow-lg"
+                  className="size-full rounded-md object-cover transition-all hover:-translate-y-0.5 hover:shadow-lg"
                 />
               </a>
             </div>
@@ -204,7 +204,7 @@ function PresentationSection() {
 function HobbySection() {
   return (
     <section
-      className={twMerge(
+      className={cn(
         "relative w-full",
         "max-w-lg px-4",
         "lg:max-w-5xl lg:px-0"
@@ -212,22 +212,17 @@ function HobbySection() {
     >
       <h1 className="pt-4 pb-6 text-3xl font-semibold">Hobbies</h1>
       <div
-        className={twMerge(
-          "grid",
-          "grid-cols-1 gap-5",
-          "lg:grid-cols-3 lg:gap-3"
-        )}
+        className={cn("flex flex-col gap-4")}
       >
-        <div>
-          <Link to="/zen-garden" className="hover:text-blue-500">
-            Zen Garden
-          </Link>
-        </div>
-        <div>
-          <a href="https://antislopbuilderclub.com/" className="hover:text-blue-500">
-            Anti Slop Builder Club
-          </a>
-        </div>
+        <a
+          className="font-semibold text-highlight"
+          href="https://antislopbuilderclub.com/"
+        >
+          Anti Slop Builder Club
+        </a>
+        <Link className="font-semibold text-highlight" to="/zen-garden">
+          Zen Garden
+        </Link>
       </div>
     </section>
   );
