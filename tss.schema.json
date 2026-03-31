@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TSS Stack Configuration",
+  "type": "object",
+  "required": ["project", "repo", "edge", "backend", "frontend", "ssm", "domain", "hostedZoneId", "subdomainMap"],
+  "properties": {
+    "project": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Project name (lowercase, used for AWS resource naming)"
+    },
+    "repo": {
+      "type": "string",
+      "pattern": "^[^/]+/[^/]+$",
+      "description": "GitHub repo in org/repo format"
+    },
+    "edge": {
+      "type": "object",
+      "required": ["devPort"],
+      "properties": {
+        "devPort": {
+          "type": "number",
+          "description": "Local dev proxy port"
+        },
+        "githubActionsIamRole": {
+          "type": "boolean",
+          "description": "Create IAM role for GitHub Actions CI/CD (includes OIDC provider)"
+        }
+      }
+    },
+    "backend": {
+      "type": "object",
+      "required": ["region", "devPort"],
+      "properties": {
+        "region": {
+          "type": "string",
+          "description": "AWS region for backend Lambda"
+        },
+        "devPort": {
+          "type": "number",
+          "description": "Local dev server port"
+        }
+      }
+    },
+    "frontend": {
+      "type": "object",
+      "required": ["bucketSuffix", "devPort"],
+      "properties": {
+        "bucketSuffix": {
+          "type": "string",
+          "description": "suffix of s3 bucket to avoid duplication"
+        },
+        "devPort": {
+          "type": "number",
+          "description": "Local dev server port"
+        }
+      }
+    },    
+    "ssm": {
+      "type": "object",
+      "required": ["region"],
+      "properties": {
+        "region": {
+          "type": "string",
+          "description": "AWS region for SSM parameters"
+        }
+      }
+    },
+    "domain": {
+      "type": "string",
+      "description": "Your domain (must have Route53 hosted zone)"
+    },
+    "hostedZoneId": {
+      "type": "string",
+      "description": "Route53 hosted zone ID"
+    },
+    "subdomainMap": {
+      "type": "object",
+      "additionalProperties": {
+        "oneOf": [
+          { "type": "string" },
+          { "type": "null" },
+          {
+            "type": "object",
+            "required": ["redirect"],
+            "properties": {
+              "redirect": {
+                "type": "string",
+                "description": "Subdomain to redirect to (301)"
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      },
+      "description": "Subdomain to branch mapping. Use \"\" for root domain, null to block, { redirect: \"target\" } for 301 redirect."
+    }
+  }
+}
