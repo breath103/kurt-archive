@@ -2,6 +2,8 @@
 
 Type-Safe Serverless Stack for deploying full-stack TypeScript apps on AWS.
 
+> **Never call `npx` directly.** This project has scripts for everything. Use the provided scripts instead.
+
 ## Live Demo
 
 - **Production (main)**: https://www.tsss.cloud/

@@ -9,9 +9,13 @@ See `documents/coding-guidelines/` for coding standards:
 - `backend.md` - Backend (packages/backend)
 - `frontend.md` - Frontend (packages/frontend)
 
+## Important Rules
+
+- **Never call `npx` directly.** This project has scripts for everything. Use the provided scripts instead.
+
 ## Running Scripts
 
-All scripts are executable via shebang — no `npm run` needed. Run everything from repo root.
+All scripts are executable via shebang — no `npm run` or `npx` needed. Run everything from repo root.
 
 ### Root-level scripts
 
@@ -46,7 +50,8 @@ All scripts are executable via shebang — no `npm run` needed. Run everything f
 ./packages/backend/scripts/lint.ts --fix               # Lint backend with auto-fix
 ./packages/frontend/scripts/lint.ts                    # Lint frontend
 ./packages/frontend/scripts/lint.ts --fix              # Lint frontend with auto-fix
-cd packages/backend && npx tsc --noEmit                # Type check
+./packages/backend/scripts/build-types.ts              # Type check backend
+./packages/frontend/scripts/build-types.ts             # Type check frontend
 ```
 
 ### Install packages
