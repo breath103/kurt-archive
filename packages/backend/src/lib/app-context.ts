@@ -1,13 +1,9 @@
 import type { Context } from "hono";
 
-import { auth } from "./auth.js";
 import { routeFactory, routesFactory } from "./route.js";
 
 export type AppEnv = {
-  Variables: {
-    user: typeof auth.$Infer.Session.user | null;
-    session: typeof auth.$Infer.Session.session | null;
-  };
+  Variables: Record<string, never>;
 };
 
 export type AppContext = Context<AppEnv>;
