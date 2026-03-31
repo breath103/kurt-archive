@@ -1,6 +1,6 @@
 declare namespace NodeJS {
   interface ProcessEnv {
-    REQUIRED_FOO: string;
-    OPTIONAL_FOO: string | undefined;
+    POSTHOG_KEY: string | undefined;
+    POSTHOG_HOST: string | undefined;
   }
 }

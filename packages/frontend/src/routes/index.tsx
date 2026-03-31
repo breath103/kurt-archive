@@ -1,12 +1,8 @@
-import { useEffect, useState } from "react";
+import { twMerge } from "tailwind-merge";
 
-import type { ApiRoutes } from "@backend/api";
-import { createRoute } from "@tanstack/react-router";
+import { createRoute, Link } from "@tanstack/react-router";
 
-import { ApiClient } from "../lib/api-client";
 import { rootRoute } from "./__root";
-
-const api = new ApiClient<ApiRoutes>();
 
 export const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -15,84 +11,227 @@ export const indexRoute = createRoute({
 });
 
 function Home() {
-  const [health, setHealth] = useState<Awaited<
-    ReturnType<typeof api.fetch<"/api/health", "GET">>
-  > | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-  const [echoResult, setEchoResult] = useState<Awaited<
-    ReturnType<typeof api.fetch<"/api/echo/:id", "POST">>
-  > | null>(null);
+  return (
+    <>
+      <nav className="bg-slate-50/5">
+        <div
+          className={twMerge(
+            "relative w-full",
+            "max-w-lg p-4",
+            "lg:max-w-5xl lg:px-0",
+            "mx-auto"
+          )}
+        >
+          <a className="py-4 text-2xl font-semibold">About</a>
+        </div>
+      </nav>
 
-  useEffect(() => {
-    api.fetch("/api/health", "GET").then(setHealth).catch(console.error);
+      <main className="relative flex min-h-full w-full flex-col items-center">
+        <div className="space-y-12 py-8">
+          <AboutSection />
+          <PresentationSection />
+          <HobbySection />
+        </div>
+      </main>
+    </>
+  );
+}
 
-    api
-      .fetch("/api/hello", "GET", { query: { name: "TypeSafe" } })
-      .then((data) => setMessage(data.message))
-      .catch(console.error);
+function AboutSection() {
+  return (
+    <section
+      className={twMerge(
+        "relative w-full",
+        "max-w-lg px-4",
+        "lg:max-w-5xl lg:px-0"
+      )}
+    >
+      <div className="space-y-2">
+        <p>
+          {"I'm a "}
+          <a
+            className="font-semibold text-highlight"
+            href="https://github.com/breath103"
+          >
+            Software Engineer{", "}
+          </a>
+          <a
+            className="font-semibold text-highlight"
+            href="https://www.mirror.work/en/"
+          >
+            Startup Founder
+          </a>
+          {", "}
+          <a
+            className="font-semibold text-highlight"
+            href="https://builder.aws.com/community/heroes/KurtLee"
+          >
+            AWS Serverless Hero
+          </a>
+          {", "}
+          <a
+            className="font-semibold text-highlight"
+            href="https://www.instagram.com/symphakurt/?hl=en"
+          >
+            Hobbyist Painter
+          </a>
+          <br />
+          most interested in building meaningful, beautiful software product -
+          and company/team that could do that.
+        </p>
+        <p>
+          <a
+            className="font-semibold text-highlight"
+            href="mailto:breath103@gmail.com"
+          >
+            breath103@gmail.com
+          </a>
+          {" / "}
+          <a
+            className="font-semibold text-highlight"
+            href="https://www.linkedin.com/in/kurt-lee-70010391/"
+          >
+            LinkedIn
+          </a>
+        </p>
+      </div>
+    </section>
+  );
+}
 
-    api
-      .fetch("/api/echo/:id", "POST", {
-        params: { id: "test-123" },
-        body: {
-          message: "Hello from frontend!",
-          count: 42,
-          complexPayload: {
-            tuple: ["String", 1, 2, 3],
-          }
-        },
-      })
-      .then(setEchoResult)
-      .catch(console.error);
-  }, []);
+function PresentationSection() {
+  const presentations: Array<{
+    type: "youtube";
+    videoId: string;
+    title: string;
+    event: string;
+  }> = [
+    {
+      type: "youtube",
+      videoId: "7pRItmvbXLM",
+      title: "생성 AI 모델의 임베딩 벡터를 이용한 서버리스 추천 검색 구현하기",
+      event: "AWS Summit Seoul 2023",
+    },
+    {
+      type: "youtube",
+      videoId: "SGJ5WR60K58",
+      title:
+        "How CATCH FASHION built a serverless ML inference service with AWS Lambda",
+      event: "AWS re:Invent 2020",
+    },
+    {
+      type: "youtube",
+      videoId: "4vwXY0SGnDo",
+      title:
+        "Serverless Today: Stateless Architectures for Stateless Applications",
+      event: "AWS Hero Summit 2020",
+    },
+    {
+      type: "youtube",
+      videoId: "Y3XpIQHfqZQ",
+      title: "서버리스 기반 검색 서비스 구축하기",
+      event: "AWS Community Day Online 2020",
+    },
+    {
+      type: "youtube",
+      videoId: "-LZFJ6BpplE",
+      title: "서버리스 기반 컨텐츠 추천 서비스 만들기",
+      event: "AWS Summit Seoul 2019",
+    },
+    {
+      type: "youtube",
+      videoId: "zZ8Sn-vbsOE",
+      title:
+        "Lambda@Edge를 통한 점진적 서버리스 이전 및 멑티 리전 트래픽 길들이기",
+      event: "AWS Summit Seoul 2018",
+    },
+    {
+      type: "youtube",
+      videoId: "CM47-1UpgOc",
+      title: "Vingle의 AWS 기반 서버리스 마이크로 서비스 구현 사례",
+      event: "AWS Summit Seoul 2017",
+    },
+  ];
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">TSS Stack Template</h1>
-        <p className="mt-1 text-gray-600">Type-Safe Full Serverless Stack</p>
+    <section
+      className={twMerge(
+        "relative w-full",
+        "max-w-lg px-4",
+        "lg:max-w-5xl lg:px-0"
+      )}
+    >
+      <h1 className="pt-4 pb-6 text-3xl font-semibold">Presentations</h1>
+      <div
+        className={twMerge(
+          "grid",
+          "grid-cols-1 gap-5",
+          "lg:grid-cols-3 lg:gap-3"
+        )}
+      >
+        {presentations.map((presentation, index) => {
+          switch (presentation.type) {
+            case "youtube": {
+              return (
+                <div key={index}>
+                  <div className="aspect-560/315">
+                    <a
+                      href={`https://www.youtube.com/watch?v=${presentation.videoId}`}
+                    >
+                      <img
+                        loading="lazy"
+                        src={`https://img.youtube.com/vi/${presentation.videoId}/0.jpg`}
+                        alt={presentation.title}
+                        className="size-full rounded-md object-cover transition-all hover:translate-y-[-2px] hover:shadow-lg"
+                      />
+                    </a>
+                  </div>
+                  <a
+                    href={`https://www.youtube.com/watch?v=${presentation.videoId}`}
+                  >
+                    <h5 className="pt-1 text-sm">
+                      <span className="font-semibold">
+                        {presentation.title}
+                      </span>
+                      <br />
+                      <span className="italic">{presentation.event}</span>
+                    </h5>
+                  </a>
+                </div>
+              );
+            }
+            default:
+              return null;
+          }
+        })}
       </div>
+    </section>
+  );
+}
 
-      <section className="rounded-lg bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-xl font-semibold text-gray-800">Frontend Env</h2>
-        <pre className="overflow-auto rounded-sm bg-gray-100 p-4 text-sm">
-          {JSON.stringify({
-            REQUIRED_FOO: process.env.REQUIRED_FOO,
-            OPTIONAL_FOO: process.env.OPTIONAL_FOO,
-          }, null, 2)}
-        </pre>
-      </section>
-
-      <section className="rounded-lg bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-xl font-semibold text-gray-800">Backend Health</h2>
-        {health ? (
-          <pre className="overflow-auto rounded-sm bg-gray-100 p-4 text-sm">
-            {JSON.stringify(health, null, 2)}
-          </pre>
-        ) : (
-          <p className="text-gray-500">Loading...</p>
+function HobbySection() {
+  return (
+    <section
+      className={twMerge(
+        "relative w-full",
+        "max-w-lg px-4",
+        "lg:max-w-5xl lg:px-0"
+      )}
+    >
+      <h1 className="pt-4 pb-6 text-3xl font-semibold">Hobbies</h1>
+      <div
+        className={twMerge(
+          "grid",
+          "grid-cols-1 gap-5",
+          "lg:grid-cols-3 lg:gap-3"
         )}
-      </section>
-
-      <section className="rounded-lg bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-xl font-semibold text-gray-800">API Response</h2>
-        {message ? (
-          <p className="text-gray-700">{message}</p>
-        ) : (
-          <p className="text-gray-500">Loading...</p>
-        )}
-      </section>
-
-      <section className="rounded-lg bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-xl font-semibold text-gray-800">Echo Test (POST with params + body)</h2>
-        {echoResult ? (
-          <pre className="overflow-auto rounded-sm bg-gray-100 p-4 text-sm">
-            {JSON.stringify(echoResult, null, 2)}
-          </pre>
-        ) : (
-          <p className="text-gray-500">Loading...</p>
-        )}
-      </section>
-    </div>
+      >
+        <div>
+          <Link to="/zen-garden" className="hover:text-blue-500">
+            Zen Garden
+          </Link>
+        </div>
+      </div>
+    </section>
   );
 }
