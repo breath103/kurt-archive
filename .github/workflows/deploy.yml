@@ -23,12 +23,12 @@ jobs:
             command: ./packages/backend/scripts/build-types.ts && ./packages/frontend/scripts/build-types.ts && ./packages/frontend/scripts/lint.ts && cd packages/frontend && ../../scripts/with-env.sh --env=test npx vitest run
     name: ${{ matrix.name }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version-file: ".nvmrc"
           cache: npm
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         id: nm-cache
         with:
           path: node_modules
@@ -45,12 +45,12 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version-file: ".nvmrc"
           cache: npm
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         id: nm-cache
         with:
           path: node_modules
@@ -59,13 +59,13 @@ jobs:
         run: npm ci
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: us-east-1
 
       - run: ./packages/backend/scripts/pack-build.ts
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         id: deploy-deps
         with:
           path: packages/backend/dist/node_modules
