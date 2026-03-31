@@ -223,6 +223,11 @@ function HobbySection() {
             Zen Garden
           </Link>
         </div>
+        <div>
+          <a href="https://antislopbuilderclub.com/" className="hover:text-blue-500">
+            Anti Slop Builder Club
+          </a>
+        </div>
       </div>
     </section>
   );
