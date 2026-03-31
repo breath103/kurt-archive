@@ -3,14 +3,15 @@
   "project": "kurt-archive",
   "repo": "breath103/kurt-archive",
   "edge": {
-    "devPort": 3000
+    "devPort": 3000,
+    "githubActionsIamRole": true
   },
   "backend": {
     "region": "us-east-1",
     "devPort": 3001
   },
   "frontend": {
-    "bucketSuffix": "",
+    "bucketSuffix": "prod",
     "devPort": 3002
   },
   "ssm": {
@@ -19,7 +20,7 @@
   "domain": "kurtlee.me",
   "hostedZoneId": "Z07314322Y1FJ8OQ75NUO",
   "subdomainMap": {
-    "": "main",
+    "": { "redirect": "www" },
     "www": "main",
     "main": null
   }

@@ -13,15 +13,12 @@ export class GitHubActionsIam extends Construct {
   constructor(scope: Construct, id: string, props: GitHubActionsIamProps) {
     super(scope, id);
 
-    const provider = new iam.OpenIdConnectProvider(this, "GitHubOIDC", {
-      url: "https://token.actions.githubusercontent.com",
-      clientIds: ["sts.amazonaws.com"],
-    });
+    const githubOpenIdProviderArn = "arn:aws:iam::031134018515:oidc-provider/token.actions.githubusercontent.com";
 
     this.role = new iam.Role(this, "Role", {
       roleName: `${props.project}-github-actions`,
       assumedBy: new iam.FederatedPrincipal(
-        provider.openIdConnectProviderArn,
+        githubOpenIdProviderArn,
         {
           StringEquals: {
             "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
