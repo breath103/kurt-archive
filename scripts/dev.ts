@@ -1,0 +1,76 @@
+#!/usr/bin/env -S node --import tsx
+import { spawn } from "node:child_process";
+import { parseArgs } from "node:util";
+
+import { loadConfig } from "shared/config";
+
+import { DevProcess } from "./dev/dev-process.js";
+
+// Detect parent death (e.g. terminal closed without SIGHUP).
+const parentPid = process.ppid;
+setInterval(() => {
+  if (process.ppid !== parentPid) {
+    try { process.kill(0, "SIGTERM"); } catch {}
+    process.exit(1);
+  }
+}, 500);
+
+// Watchdog: separate process that polls our PID. If we die (even SIGKILL),
+// the watchdog kills the entire process group. Handles the untrappable case.
+spawn("node", ["-e", `
+  setInterval(() => {
+    try { process.kill(${process.pid}, 0); } catch { process.kill(0, "SIGTERM"); process.exit(); }
+  }, 500);
+`], { stdio: "ignore" });
+
+async function main() {
+  process.title = "dev:main";
+  console.log(`dev:main pid=${process.pid}`);
+  const config = loadConfig();
+  const { values } = parseArgs({
+    options: {
+      env: { type: "string", short: "e", default: "development" },
+      open: { type: "boolean", short: "o", default: false },
+    },
+    strict: false,
+  });
+
+  const envFlag = [`--env=${values.env}`];
+
+  const shutdown = () => {
+    console.log("\x1b[33mShutting down...\x1b[0m");
+    for (const p of all) p.kill();
+    try { process.kill(0, "SIGTERM"); } catch {}
+    process.exit(1);
+  };
+
+  const backend = new DevProcess("Backend", "packages/backend/scripts/dev.ts", envFlag, { color: "\x1b[34m", onCrash: shutdown });
+  const frontend = new DevProcess("Frontend", "packages/frontend/scripts/dev.ts", envFlag, { color: "\x1b[32m", onCrash: shutdown });
+  const edge = new DevProcess("Edge", "packages/edge/scripts/dev.ts", [], { color: "\x1b[35m", onCrash: shutdown });
+  const types = new DevProcess("Types", "packages/backend/scripts/dev-types.ts", [], { color: "\x1b[33m" });
+
+  const all = [backend, frontend, edge, types];
+
+  for (const sig of ["SIGINT", "SIGTERM", "SIGTSTP"] as const) {
+    process.on(sig, shutdown);
+  }
+
+  try {
+    await Promise.all([
+      backend.waitForStdout({ pattern: "Backend running on", timeout: 1000 * 5 }),
+      frontend.waitForStdout({ pattern: "Local:", timeout: 1000 * 5 }),
+      edge.waitForStdout({ pattern: "Edge proxy running on", timeout: 1000 * 5 }),
+    ]);
+  } catch (error) {
+    console.error(`\x1b[31m${error instanceof Error ? error.message : error}\x1b[0m`);
+    shutdown();
+  }
+
+  console.log("\x1b[36m✓ All services ready\x1b[0m");
+
+  if (values.open) {
+    spawn("./scripts/open-chrome.sh", [`http://localhost:${config.edge.devPort}`], { stdio: "inherit" });
+  }
+}
+
+void main();

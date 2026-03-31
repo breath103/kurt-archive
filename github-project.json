@@ -1,0 +1,27 @@
+{
+  "project": "https://github.com/users/breath103/projects/3/views/1",
+  "repo": "breath103/tss-stack-template",
+  "owner": "breath103",
+  "number": 3,
+  "projectId": "PVT_kwHOAB6LgM4BSEXw",
+  "title": "tss-stack-template",
+  "statusFieldId": "PVTSSF_lAHOAB6LgM4BSEXwzg_tfY8",
+  "columns": {
+    "Backlog": "f75ad846",
+    "Ready": "61e4505c",
+    "In progress": "47fc9ee4",
+    "In review": "df73e18b",
+    "Done": "98236657"
+  },
+  "labels": [
+    "bug",
+    "documentation",
+    "duplicate",
+    "enhancement",
+    "help wanted",
+    "good first issue",
+    "invalid",
+    "question",
+    "wontfix"
+  ]
+}
