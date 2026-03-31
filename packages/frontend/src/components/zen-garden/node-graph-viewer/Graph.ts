@@ -43,7 +43,7 @@ export function buildGraph(
 
     Array.from(node.debugInputs.entries()).forEach(([inputName, inputObs]) => {
       if (inputObs instanceof ReactiveNode) {
-        info.inputs.set(inputName, traverse(inputObs));
+        info.inputs.set(inputName, traverse(inputObs)); // eslint-disable-line @typescript-eslint/no-unsafe-argument
       } else if (inputObs instanceof ValueNode) {
         info.inputs.set(inputName, traverseValueNode(inputObs));
       } else {

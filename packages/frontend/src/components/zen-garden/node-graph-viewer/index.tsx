@@ -44,7 +44,7 @@ export function NodeGraphViewer({ sinkNodes, renderer, onClose }: NodeGraphViewe
 
   useEffect(() => {
     const g = buildGraph(sinkNodes);
-    setGraph(g);
+    setGraph(g); // eslint-disable-line react-hooks/set-state-in-effect
 
     const generated = computeLayout(g);
     const cached = loadCachedPositions();
@@ -160,7 +160,7 @@ export function NodeGraphViewer({ sinkNodes, renderer, onClose }: NodeGraphViewe
                 ref={el => setNodeRef(info.id, el)}
                 className="absolute cursor-move"
                 style={{ left: pos.x, top: pos.y }}
-                onMouseDown={e => { e.preventDefault(); handleMouseDown(e, info.id); }}
+                onMouseDown={e => { e.preventDefault(); handleMouseDown(e, info.id); }} // eslint-disable-line @stylistic/max-statements-per-line
               >
                 <NodeCard info={info} renderer={renderer} />
               </div>

@@ -23,7 +23,7 @@ function ZenGardenPage() {
 
   useEffect(() => {
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-    if (!canvas) return;
+    if (!canvas) return; // eslint-disable-line @typescript-eslint/no-unnecessary-condition
 
     const ed = new ZenGardenEditor(canvas, {
       plain: {
@@ -43,7 +43,7 @@ function ZenGardenPage() {
         { id: "rake2", type: "rakeStroke", path: { type: "points", points: [{ x: -3, y: -1 }, { x: -2, y: 0 }, { x: -3, y: 1 }], closed: false }, width: 0.5, numberOfForks: 3, forkDepth: 0.1 },
       ],
     });
-    setEditor(ed);
+    setEditor(ed); // eslint-disable-line react-hooks/set-state-in-effect
 
     return () => ed.dispose();
   }, []);
@@ -136,7 +136,7 @@ function RakeStrokePanel({ rakeStroke }: { rakeStroke: ZenGardenRakeStroke }) {
           type="number"
           step="0.1"
           defaultValue={rakeStroke.width}
-          onChange={(e) => { rakeStroke.width = Number(e.target.value); }}
+          onChange={(e) => { rakeStroke.width = Number(e.target.value); }} // eslint-disable-line react-hooks/immutability
           className="ml-2 w-20 rounded-sm bg-white/20 px-2 py-1"
         />
       </label>

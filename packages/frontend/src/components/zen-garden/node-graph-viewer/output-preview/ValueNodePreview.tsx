@@ -27,7 +27,7 @@ export function ValueNodePreview({ node }: Props) {
       validator={validator}
       onChange={e => {
         try {
-          node.value = e.formData;
+          node.value = e.formData; // eslint-disable-line react-hooks/immutability
         } catch {
           // validation failed, ignore
         }

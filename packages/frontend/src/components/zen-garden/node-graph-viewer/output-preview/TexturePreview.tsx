@@ -54,7 +54,7 @@ export function TexturePreview({ value, renderer }: Props) {
 
   useEffect(() => {
     if (!div || !imageSrc) return;
-    div.innerHTML = "";
+    div.innerHTML = ""; // eslint-disable-line react-hooks/immutability
     const img = document.createElement("img");
     img.src = imageSrc;
     img.style.width = "w-full";

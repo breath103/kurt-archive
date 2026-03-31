@@ -169,41 +169,33 @@ function PresentationSection() {
           "lg:grid-cols-3 lg:gap-3"
         )}
       >
-        {presentations.map((presentation, index) => {
-          switch (presentation.type) {
-            case "youtube": {
-              return (
-                <div key={index}>
-                  <div className="aspect-560/315">
-                    <a
-                      href={`https://www.youtube.com/watch?v=${presentation.videoId}`}
-                    >
-                      <img
-                        loading="lazy"
-                        src={`https://img.youtube.com/vi/${presentation.videoId}/0.jpg`}
-                        alt={presentation.title}
-                        className="size-full rounded-md object-cover transition-all hover:translate-y-[-2px] hover:shadow-lg"
-                      />
-                    </a>
-                  </div>
-                  <a
-                    href={`https://www.youtube.com/watch?v=${presentation.videoId}`}
-                  >
-                    <h5 className="pt-1 text-sm">
-                      <span className="font-semibold">
-                        {presentation.title}
-                      </span>
-                      <br />
-                      <span className="italic">{presentation.event}</span>
-                    </h5>
-                  </a>
-                </div>
-              );
-            }
-            default:
-              return null;
-          }
-        })}
+        {presentations.map((presentation, index) => (
+          <div key={index}>
+            <div className="aspect-560/315">
+              <a
+                href={`https://www.youtube.com/watch?v=${presentation.videoId}`}
+              >
+                <img
+                  loading="lazy"
+                  src={`https://img.youtube.com/vi/${presentation.videoId}/0.jpg`}
+                  alt={presentation.title}
+                  className="size-full rounded-md object-cover transition-all hover:translate-y-[-2px] hover:shadow-lg"
+                />
+              </a>
+            </div>
+            <a
+              href={`https://www.youtube.com/watch?v=${presentation.videoId}`}
+            >
+              <h5 className="pt-1 text-sm">
+                <span className="font-semibold">
+                  {presentation.title}
+                </span>
+                <br />
+                <span className="italic">{presentation.event}</span>
+              </h5>
+            </a>
+          </div>
+        ))}
       </div>
     </section>
   );
