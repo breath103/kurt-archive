@@ -1,5 +1,6 @@
 [
   { "pattern": "index.html", "cacheControl": "public, max-age=30, must-revalidate" },
   { "pattern": "*.html", "cacheControl": "public, max-age=30, must-revalidate" },
+  { "pattern": "robots.txt", "cacheControl": "public, max-age=86400, must-revalidate" },
   { "pattern": "*", "cacheControl": "public, max-age=31536000, immutable" }
 ]
