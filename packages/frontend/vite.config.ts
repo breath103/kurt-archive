@@ -27,7 +27,7 @@ function htmlEnvPlugin() {
   return {
     name: "html-env",
     transformIndexHtml(html: string) {
-      return html.replace(/__SITE_URL__/g, provided.SITE_URL ?? "");
+      return html.replace(/\$SITE_URL/g, provided.SITE_URL ?? "");
     },
   };
 }
