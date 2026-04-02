@@ -78,6 +78,7 @@ jobs:
       - name: Deploy frontend
         env:
           # packages/frontend/src/env.d.ts
+          SITE_URL: "https://www.kurtlee.me"
           POSTHOG_KEY: "phc_i137na3J3eT0uJCvdNrfpywJ1Tt3bXuopRLIwoJsqU2"
           POSTHOG_HOST: "https://us.i.posthog.com"
         run: ./packages/frontend/scripts/deploy.ts --name=${{ github.ref_name }}
