@@ -23,8 +23,17 @@ const envDefines = Object.fromEntries(
   vars.map((v) => [`process.env.${v.name}`, JSON.stringify(provided[v.name] ?? "")])
 );
 
+function htmlEnvPlugin() {
+  return {
+    name: "html-env",
+    transformIndexHtml(html: string) {
+      return html.replace(/__SITE_URL__/g, provided.SITE_URL ?? "");
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), htmlEnvPlugin()],
   define: envDefines,
   resolve: {
     alias: {
