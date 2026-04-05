@@ -53,8 +53,9 @@ function AboutSection() {
             className="font-semibold text-highlight"
             href="https://github.com/breath103"
           >
-            Software Engineer{", "}
+            Software Engineer
           </a>
+          {", "}
           <a
             className="font-semibold text-highlight"
             href="https://www.mirror.work/en/"
@@ -71,7 +72,14 @@ function AboutSection() {
           {", "}
           <a
             className="font-semibold text-highlight"
-            href="https://www.instagram.com/symphakurt/?hl=en"
+            href="https://www.youtube.com/@%ED%85%8C%ED%97%A4%EB%9E%80%EB%B0%B8%EB%A6%AC"
+          >
+            Occasionally Youtuber
+          </a>
+          {", "}
+          <a
+            className="font-semibold text-highlight"
+            href="https://www.instagram.com/p/CRZO78PgS8J/?hl=en"
           >
             Hobbyist Painter
           </a>
