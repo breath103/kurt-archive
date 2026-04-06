@@ -117,7 +117,7 @@ function PresentationSection() {
     {
       type: "youtube",
       videoId: "7pRItmvbXLM",
-      title: "생성 AI 모델의 임베딩 벡터를 이용한 서버리스 추천 검색 구현하기",
+      title: "Building a Serverless Recommendation Search with Generative AI Embedding Vectors",
       event: "AWS Summit Seoul 2023",
     },
     {
@@ -137,26 +137,26 @@ function PresentationSection() {
     {
       type: "youtube",
       videoId: "Y3XpIQHfqZQ",
-      title: "서버리스 기반 검색 서비스 구축하기",
+      title: "Building a Serverless Search Service",
       event: "AWS Community Day Online 2020",
     },
     {
       type: "youtube",
       videoId: "-LZFJ6BpplE",
-      title: "서버리스 기반 컨텐츠 추천 서비스 만들기",
+      title: "Building a Serverless Content Recommendation Service",
       event: "AWS Summit Seoul 2019",
     },
     {
       type: "youtube",
       videoId: "zZ8Sn-vbsOE",
       title:
-        "Lambda@Edge를 통한 점진적 서버리스 이전 및 멑티 리전 트래픽 길들이기",
+        "Gradual Serverless Migration and Multi-Region Traffic Management with Lambda@Edge",
       event: "AWS Summit Seoul 2018",
     },
     {
       type: "youtube",
       videoId: "CM47-1UpgOc",
-      title: "Vingle의 AWS 기반 서버리스 마이크로 서비스 구현 사례",
+      title: "Vingle's Serverless Microservices Implementation on AWS",
       event: "AWS Summit Seoul 2017",
     },
   ];

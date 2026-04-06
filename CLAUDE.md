@@ -12,6 +12,8 @@ See `documents/coding-guidelines/` for coding standards:
 ## Important Rules
 
 - **Never call `npx` directly.** This project has scripts for everything. Use the provided scripts instead.
+- **When user says "show me" a file (image, screenshot, etc.), use `open <path>` to open it in the OS default viewer.** Do not just read the file inline.
+- **Use `./scripts/e2e.ts` for browser automation.** Never use Chrome MCP tools. The e2e script manages headless Chrome via CDP.
 
 ## Running Scripts
 
