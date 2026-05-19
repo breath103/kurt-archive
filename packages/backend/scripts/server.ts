@@ -10,8 +10,9 @@ import { serve } from "@hono/node-server";
 // Validate env vars (already loaded by with-env.sh)
 loadAndValidateEnv(path.join(import.meta.dirname, "../src/env.d.ts"));
 
-const { app } = await import("../src/index.js");
 const { backend } = loadConfig();
+
+const { app } = await import("../src/index.js");
 
 serve({ fetch: app.fetch, port: backend.devPort });
 console.log(`Backend running on http://localhost:${backend.devPort}`);
