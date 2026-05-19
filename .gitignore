@@ -13,8 +13,11 @@ cdk.out
 # Claude local settings
 .claude/settings.local.json
 
+# Dev server status
+.dev-status.json
+
 # E2E browser status
-.e2e-status.json
+.e2e-status-*.json
 
 # Local config overrides
 tss.override.json

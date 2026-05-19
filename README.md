@@ -102,10 +102,42 @@ Set up Google OAuth at [Google Cloud Console](https://console.cloud.google.com/a
 ### 5. Dev
 
 ```bash
-./scripts/dev.ts
+./scripts/dev.ts                # foreground, streams logs (Ctrl-C to stop)
+./scripts/dev.ts start          # detach to background, return once ready
+./scripts/dev.ts status         # show ready/starting + per-process pids
+./scripts/dev.ts stop           # kill the background dev server
 ```
 
 Runs edge proxy on `:3000`, backend on `:3001`, frontend on `:3002`.
+
+`start` writes `.dev-status.json` (gitignored) and exits once all servers are ready (30s timeout). Any subprocess crash tears the whole tree down — no orphans — and a detached reaper SIGKILLs the process group 2s after the foreground dies, so even SIGKILL of the foreground is cleaned up.
+
+## Multiple Worktrees
+
+To work on several branches at once without dev/auth/e2e collisions, use git worktrees plus a per-checkout `tss.override.json`.
+
+```bash
+# From the main checkout:
+git worktree add ../myapp-2 some-branch
+cd ../myapp-2
+npm install
+```
+
+Then in the new worktree, create `tss.override.json` (gitignored) with a unique `dev.worktree` and dev ports:
+
+```json
+{
+  "dev": { "worktree": "2" },
+  "edge":     { "devPort": 3010 },
+  "backend":  { "devPort": 3011 },
+  "frontend": { "devPort": 3012 }
+}
+```
+
+`dev.worktree` is the per-checkout id. Together with `project` it namespaces:
+
+- **auth cookies** — `BETTER_AUTH_COOKIE_PREFIX=${project}-${worktree}`, so two localhost instances don't share a session cookie.
+- **e2e Chrome** — CDP port, profile dir (`.tmp/e2e-chrome-profile-${project}-${worktree}`), and status file (`.e2e-status-${project}-${worktree}.json`) are all per-namespace, so `./scripts/e2e.ts start` in two worktrees launches two independent browsers.
 
 ## E2E Testing
 
@@ -114,11 +146,12 @@ The e2e tool manages a headless Chrome instance via Chrome DevTools Protocol for
 ### Quick Start
 
 ```bash
-./scripts/dev.ts           # Start dev servers first
+./scripts/dev.ts start     # Start dev servers (background)
 ./scripts/e2e.ts start     # Start headless Chrome
 ./scripts/e2e.ts navigate /
 ./scripts/e2e.ts screenshot
 ./scripts/e2e.ts stop      # Stop Chrome when done
+./scripts/dev.ts stop      # Stop dev servers when done
 ```
 
 ### Commands

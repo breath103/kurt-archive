@@ -2,6 +2,9 @@
   "$schema": "./tss.schema.json",
   "project": "kurt-archive",
   "repo": "breath103/kurt-archive",
+  "dev": {
+    "worktree": "1"
+  },
   "edge": {
     "devPort": 3000,
     "githubActionsIamRole": true
